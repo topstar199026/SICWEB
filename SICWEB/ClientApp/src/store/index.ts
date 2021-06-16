@@ -1,22 +1,25 @@
-import * as WeatherForecasts from './WeatherForecasts';
-import * as Counter from './Counter';
+import { 
+  useDispatch as useReduxDispatch,
+  useSelector as useReduxSelector
+} from 'react-redux';
+import type { TypedUseSelectorHook } from 'react-redux';
+import type { ThunkAction } from 'redux-thunk';
+import { configureStore } from '@reduxjs/toolkit';
+import type { Action } from  '@reduxjs/toolkit';
+import rootReducer from './rootReducer';
 
-// The top-level state object
-export interface ApplicationState {
-    counter: Counter.CounterState | undefined;
-    weatherForecasts: WeatherForecasts.WeatherForecastsState | undefined;
-}
+const store = configureStore({
+  reducer: rootReducer
+});
 
-// Whenever an action is dispatched, Redux will update each top-level application state property using
-// the reducer with the matching name. It's important that the names match exactly, and that the reducer
-// acts on the corresponding ApplicationState property type.
-export const reducers = {
-    counter: Counter.reducer,
-    weatherForecasts: WeatherForecasts.reducer
-};
+export type RootState = ReturnType<typeof store.getState>;
 
-// This type can be used as a hint on action creators so that its 'dispatch' and 'getState' params are
-// correctly typed to match your store.
-export interface AppThunkAction<TAction> {
-    (dispatch: (action: TAction) => void, getState: () => ApplicationState): void;
-}
+export type AppDispatch = typeof store.dispatch;
+
+export type AppThunk = ThunkAction<void, RootState, null, Action<string>>;
+
+export const useSelector: TypedUseSelectorHook<RootState> = useReduxSelector;
+
+export const useDispatch = () => useReduxDispatch<AppDispatch>();
+
+export default store;

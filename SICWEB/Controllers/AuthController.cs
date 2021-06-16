@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SICWEB.DbFactory;
-using SICWEB.Hubs;
+// using SICWEB.Hubs;
 using SICWEB.Models;
 using System;
 using System.Collections.Generic;
@@ -21,17 +21,17 @@ namespace SICWEB.Controllers
     [Route("api/[controller]/[action]")]
     public class AuthController : ControllerBase
     {
-        private readonly IHubContext<UsersHub> _hubContext;
-        private readonly MssqlDbContext _context_MS;
+        // private readonly IHubContext<UsersHub> _hubContext;
+        private readonly MainMssqlDbContext _context_MS;
         private readonly IConfiguration _configuration;
         private readonly string _engine;
         public AuthController(
-            IHubContext<UsersHub> usersHub,
-            MssqlDbContext context_MS,
+            // IHubContext<UsersHub> usersHub,
+            MainMssqlDbContext context_MS,
             IConfiguration configuration
-            )
+        )
         {
-            _hubContext = usersHub;
+            // _hubContext = usersHub;
             _context_MS = context_MS;
             _configuration = configuration;
             _engine = configuration.GetConnectionString("ActiveEngine");
@@ -41,15 +41,15 @@ namespace SICWEB.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ProducesResponseType(typeof(AuthUser), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Login([FromBody] Credentials request)
+        public IActionResult Login([FromBody] Credentials request)
         {
-            var authUser = new AuthUser("success", "", request.UserName);
+            var authUser = new AuthUser("success", "", request.UserName ?? request.Email, request.Email);
             if (_engine.Equals("MSSQL"))
             {
-                if (_context_MS.USUARIO.Where(u => u.Usua_c_cdoc_id.Equals(request.UserName)).Count() == 0)
-                    return Ok(new AuthUser("fail", "El usuario y/o contraseña, son incorrectos.", ""));
-                else if (_context_MS.USUARIO.Where(u => u.Usua_c_vpass.Equals(request.Password)).Count() == 0)
-                    return Ok(new AuthUser("fail", "El usuario y/o contraseña, son incorrectos.", ""));
+                if (!_context_MS.USUARIO.Where(u => u.Usua_c_cdoc_id.Equals(request.UserName ?? request.UserName)).Any())
+                    return Ok(new AuthUser("fail", "El usuario y/o contraseña, son incorrectos.", "", ""));
+                else if (_context_MS.USUARIO.Where(u => u.Usua_c_vpass.Equals(request.Password)).Any())
+                    return Ok(new AuthUser("fail", "El usuario y/o contraseña, son incorrectos.", "", ""));
                 else
                 {
                     authUser.Token = CreateToken(authUser);
@@ -59,27 +59,29 @@ namespace SICWEB.Controllers
             {
                 authUser.Token = CreateToken(authUser);
             }
-            await _hubContext.Clients.All.SendAsync("UserLogin");
+            // await _hubContext.Clients.All.SendAsync("UserLogin");
             return Ok(authUser);
         }
+
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Signup([FromBody] Credentials request)
+        public async Task<IActionResult> Register([FromBody] Credentials request)
         {
-            var authUser = new AuthUser("success", "", request.UserName);
+            var authUser = new AuthUser("success", "", request.UserName,  request.Email);
             if (_engine.Equals("MSSQL"))
             {
-                if (_context_MS.USUARIO.Where(u => u.Usua_c_cdoc_id.Equals(request.UserName)).Count() > 0)
-                    return Ok(new AuthUser("fail", "El nombre de usuario ya existe.", ""));
+                if (_context_MS.USUARIO.Where(u => u.Usua_c_cdoc_id.Equals(request.UserName)).Any())
+                    return Ok(new AuthUser("fail", "El nombre de usuario ya existe.", "", ""));
                 else
                 {
                     try
                     {
-                        T_USUARIO user = new T_USUARIO
+                        T_USUARIO user = new()
                         {
                             Usua_c_cusu_red = "",
                             Usua_c_cdoc_id = authUser.UserName,
-                            Usua_c_vpass = request.Password
+                            Usua_c_vpass = request.Password,
+                            Usua_c_bestado = true
                         };
                         await _context_MS.USUARIO.AddAsync(user);
                         await _context_MS.SaveChangesAsync();
@@ -92,24 +94,19 @@ namespace SICWEB.Controllers
             {
                 authUser.Token = CreateToken(authUser);
             }
-            await _hubContext.Clients.All.SendAsync("UserLogin");
+            // await _hubContext.Clients.All.SendAsync("UserLogin");
             return Ok(authUser);
         }
 
-        [Authorize(Roles = "cliente")]
-        public IEnumerable<T_USUARIO> getUsersList(int startIndex)
-        {
-            return _context_MS.USUARIO.ToArray();
-        }
-
-
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> Logout()
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(typeof(AuthUser), StatusCodes.Status200OK)]
+        public IActionResult Me()
         {
-            await _hubContext.Clients.All.SendAsync("UserLogout");
+
             return Ok();
         }
+
 
         public string CreateToken(AuthUser user)
         {

@@ -1,16 +1,19 @@
-import * as React from 'react';
-import { Route } from 'react-router';
-import Layout from './components/Layout';
-import Home from './components/Home';
-import Counter from './components/Counter';
-import FetchData from './components/FetchData';
+import './App.css';
+import { Router } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+import { AuthProvider } from 'src/contexts/JWTAuthContext';
+import routes, { renderRoutes } from './routes';
 
-import './custom.css'
+const history = createBrowserHistory();
 
-export default () => (
-    <Layout>
-        <Route exact path='/' component={Home} />
-        <Route path='/counter' component={Counter} />
-        <Route path='/fetch-data/:startDateIndex?' component={FetchData} />
-    </Layout>
-);
+function App() {
+  return (
+    <Router history={history}>
+      <AuthProvider>
+        {renderRoutes(routes)}
+      </AuthProvider>
+    </Router>
+  );
+}
+
+export default App;
