@@ -141,19 +141,20 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (_email: string, _password: string) => {
     const response = await axios.post<{ status: string; email: string; userName: string; token: string; }>('/api/auth/login', { email: _email, password: _password });
-    const { email, userName, token } = response.data;
+    const { status, email, userName, token } = response.data;
     const user: User = {
       email: email,
       userName: userName
     }
-
-    setSession(token);
-    dispatch({
-      type: 'LOGIN',
-      payload: {
-        user
-      }
-    });
+    if(status && status === "success") {
+      setSession(token);
+      dispatch({
+        type: 'LOGIN',
+        payload: {
+          user
+        }
+      });
+    }
   };
 
   const logout = () => {

@@ -43,15 +43,14 @@ namespace SICWEB.Controllers
         [ProducesResponseType(typeof(AuthUser), StatusCodes.Status200OK)]
         public IActionResult Login([FromBody] Credentials request)
         {
-            var authUser = new AuthUser("success", "", request.UserName ?? request.Email, request.Email);
+            var authUser = new AuthUser("fail", "", request.UserName ?? request.Email, request.Email);
             if (_engine.Equals("MSSQL"))
             {
-                if (!_context_MS.USUARIO.Where(u => u.Usua_c_cdoc_id.Equals(request.UserName ?? request.UserName)).Any())
-                    return Ok(new AuthUser("fail", "El usuario y/o contraseña, son incorrectos.", "", ""));
-                else if (_context_MS.USUARIO.Where(u => u.Usua_c_vpass.Equals(request.Password)).Any())
+                if (!_context_MS.USUARIO.Where(u => u.Usua_c_cdoc_id.Equals(request.UserName ?? request.Email) && u.Usua_c_vpass.Equals(request.Password)).Any())
                     return Ok(new AuthUser("fail", "El usuario y/o contraseña, son incorrectos.", "", ""));
                 else
                 {
+                    authUser.Status = "success";
                     authUser.Token = CreateToken(authUser);
                 }
             }

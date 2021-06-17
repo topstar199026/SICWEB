@@ -11,7 +11,7 @@ const GuestGuard: FC<GuestGuardProps> = ({ children }) => {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    return <Redirect to="/app/dashboard" />;
+    return <Redirect to="/interfaces/mantenimiento/frmregitem" />;
   }
 
   return (
