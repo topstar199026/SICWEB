@@ -27,7 +27,7 @@ namespace SICWEB.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize(Roles = "cliente")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult Menu()
         {

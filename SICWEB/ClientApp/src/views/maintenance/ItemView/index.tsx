@@ -11,10 +11,7 @@ import Tables from './Tables';
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
-    backgroundColor: theme.palette.background.default,
-    // minHeight: '100%',
-    // paddingTop: theme.spacing(3),
-    // paddingBottom: theme.spacing(3)
+    backgroundColor: theme.palette.background.default
   }
 }));
 

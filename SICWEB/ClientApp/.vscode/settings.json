@@ -6,6 +6,7 @@
         "initialise",
         "nprogress",
         "reduxjs",
+        "savefamilies",
         "vnomb"
     ]
 }

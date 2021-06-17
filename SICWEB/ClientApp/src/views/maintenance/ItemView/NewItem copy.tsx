@@ -33,7 +33,6 @@ interface NewItemProps {
     subFamilies?: any[],
     units?: any[],
     event?: Event;
-    _getInitialData?: () => void;
     onAddComplete?: () => void;
     onCancel?: () => void;
     onDeleteComplete?: () => void;
@@ -89,7 +88,6 @@ const NewItem: FC<NewItemProps> = ({
     subFamilies,
     units,
     event,
-    _getInitialData,
     onAddComplete,
     onCancel,
     onDeleteComplete,
@@ -184,7 +182,7 @@ const NewItem: FC<NewItemProps> = ({
                     variant="h4"
                     color="textPrimary"
                     >
-                    {'Agregar ítem nuevo'}
+                    {isCreating ? 'Agregar ítem nuevo' : 'Agregar ítem nuevo'}
                     </Typography>
                 </Box>
                 <Box p={3}>            
@@ -451,7 +449,6 @@ const NewItem: FC<NewItemProps> = ({
                     families={families}
                     subFamilies={subFamilies}
                     units={units}
-                    _getInitialData={_getInitialData}
                     onAddComplete={handleModalClose3}
                     onCancel={handleModalClose3}
                     onDeleteComplete={handleModalClose3}

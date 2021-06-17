@@ -32,7 +32,9 @@ namespace SICWEB
             services.Configure<ConnectionStrings>(_configuration.GetSection(nameof(ConnectionStrings)));
             services.AddDbContext<MainMssqlDbContext>(options =>
                 options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
-
+            services.AddDbContext<MaintenanceMssqlDbContext>(options =>
+                options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
+            
             services.AddControllersWithViews();
 
             // In production, the React files will be served from this directory
@@ -99,7 +101,8 @@ namespace SICWEB
 
                 if (env.IsDevelopment())
                 {
-                    spa.UseReactDevelopmentServer(npmScript: "start");
+                    // spa.UseReactDevelopmentServer(npmScript: "start");
+                    spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
                 }
             });
         }

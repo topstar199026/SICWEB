@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type {
   FC,
   ChangeEvent
@@ -13,8 +13,6 @@ import {
   Button,
   Card,
   Checkbox,
-  InputAdornment,
-  FormControlLabel,
   IconButton,
   Link,
   SvgIcon,
@@ -31,9 +29,7 @@ import {
 import {
   Image as ImageIcon,
   Edit as EditIcon,
-  ArrowRight as ArrowRightIcon,
-  Search as SearchIcon
-} from 'react-feather';
+  ArrowRight as ArrowRightIcon} from 'react-feather';
 
 import SearchIcon2 from '@material-ui/icons/Search';
 import AddIcon2 from '@material-ui/icons/Add';
@@ -43,7 +39,7 @@ import Label from 'src/components/Label';
 import type { Product, InventoryType } from 'src/types/product';
 import NewItem from './NewItem';
 import LoadingModal from 'src/components/LoadingModal';
-
+import {getFamilies, getSubFamilies, getUnits} from 'src/apis/itemApi'
 interface TablesProps {
   className?: string;
   products: Product[];
@@ -234,6 +230,10 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
   const classes = useStyles();
+  const [families, setFamilies] = useState<any>([]);
+  const [subFamilies, setSubFamilies] = useState<any>([]);
+  const [units, setUnits] = useState<any>([]);
+
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [page, setPage] = useState<number>(0);
   const [limit, setLimit] = useState<number>(10);
@@ -248,6 +248,33 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalOpen2, setIsModalOpen2] = useState(false);
+
+  useEffect(() => {
+    _getInitialData();
+  }, [])
+
+  const _getInitialData = () => {
+    _getFamilies();
+    _getSubFamilies();   
+    _getUnits();
+  }
+  const _getFamilies = () => {
+    getFamilies().then(res => {
+      setFamilies(res);
+    });
+  }
+
+  const _getSubFamilies = () => {
+    getSubFamilies().then(res => {
+      setSubFamilies(res);
+    });
+  }
+
+  const _getUnits = () => {
+    getUnits().then(res => {
+      setUnits(res);
+    });
+  }
 
   const handleQueryChange = (event: ChangeEvent<HTMLInputElement>): void => {
     event.persist();
@@ -402,7 +429,7 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
             <TextField
               className={classes.categoryField}
               size="small"
-              label="Category"
+              label="Familia"
               name="category"
               onChange={handleCategoryChange}
               select
@@ -410,19 +437,20 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
               value={filters.category || 'all'}
               variant="outlined"
             >
-              {categoryOptions.map((categoryOption) => (
+              <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
+              {families.map((family) => (
                 <option
-                  key={categoryOption.id}
-                  value={categoryOption.id}
+                  key={family.ifm_c_iid}
+                  value={family.ifm_c_iid}
                 >
-                  {categoryOption.name}
+                  {family.ifm_c_des}
                 </option>
               ))}
             </TextField>
             <TextField
               className={classes.availabilityField}
               size="small"
-              label="Availability"
+              label="SubFamilia"
               name="availability"
               onChange={handleAvailabilityChange}
               select
@@ -430,12 +458,13 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
               value={filters.availability || 'all'}
               variant="outlined"
             >
-              {avalabilityOptions.map((avalabilityOption) => (
+              <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
+              {subFamilies.map((subFamily) => (
                 <option
-                  key={avalabilityOption.id}
-                  value={avalabilityOption.id}
+                  key={subFamily.isf_c_iid}
+                  value={subFamily.isf_c_iid}
                 >
-                  {avalabilityOption.name}
+                  {subFamily.isf_c_vdesc}
                 </option>
               ))}
             </TextField>
@@ -612,6 +641,10 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
         {/* Dialog renders its body even if not open */}
         {isModalOpen && (
           <NewItem
+            families={families}
+            subFamilies={subFamilies}
+            units={units}
+            _getInitialData={_getInitialData}
             onAddComplete={handleModalClose}
             onCancel={handleModalClose}
             onDeleteComplete={handleModalClose}
@@ -620,7 +653,7 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
         )}
       </Dialog>
       <LoadingModal 
-        isModalOpen={isModalOpen}
+        isModalOpen={isModalOpen2}
         handleModalClose={handleModalClose2}
       />
     </Card>
