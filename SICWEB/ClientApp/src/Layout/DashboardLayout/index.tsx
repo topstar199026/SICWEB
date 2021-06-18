@@ -1,7 +1,10 @@
-import type { FC, ReactNode } from 'react';
+import { FC, ReactNode, useState } from 'react';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core';
+import useSettings from 'src/hooks/useSettings';
+
 import TopBar from './TopBar';
+import LoadingModal from 'src/components/LoadingModal';
 
 interface DashboardLayoutProps {
   children?: ReactNode
@@ -36,7 +39,10 @@ const useStyles = makeStyles((theme) => ({
 const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
 
   const classes = useStyles();
+  const { settings } = useSettings();
 
+  const [isSaveModalOpen] = useState(settings.saving);
+  console.log('isSaveModalOpen', isSaveModalOpen)
   return (
     <div className={classes.root}>
       <TopBar />
@@ -47,6 +53,10 @@ const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
           </div>
         </div>
       </div>
+      
+      <LoadingModal 
+        isModalOpen={isSaveModalOpen}
+      />
     </div>
   );
 };

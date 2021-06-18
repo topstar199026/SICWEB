@@ -26,6 +26,7 @@ import type { Theme } from 'src/theme';
 import type { Event } from 'src/types/calendar';
 import { useDispatch } from 'src/store';
 import NewCategory from './NewCategory';
+import { getSubFamilies, saveItem } from 'src/apis/itemApi';
 
 
 interface NewItemProps {
@@ -38,43 +39,19 @@ interface NewItemProps {
     onCancel?: () => void;
     onDeleteComplete?: () => void;
     onEditComplete?: () => void;
-    range?: { start: number, end: number };
 }
 
-const getInitialValues = (event?: Event, range?: { start: number, end: number; }) => {
-  if (event) {
+const getInitialValues = (event?: Event) => {
     return _.merge({}, {
-      allDay: false,
-      color: '',
-      description: '',
-      end: new Date(),
-      start: new Date(),
-      title: '',
-      submit: null
-    }, event);
-  }
-
-  if (range) {
-    return _.merge({}, {
-      allDay: false,
-      color: '',
-      description: '',
-      end: new Date(range.end),
-      start: new Date(range.start),
-      title: '',
-      submit: null
-    }, event);
-  }
-
-  return {
-    allDay: false,
-    color: '',
-    description: '',
-    end: new Date(),
-    start: new Date(),
-    title: '',
-    submit: null
-  };
+        code: '',
+        description: '',
+        unit: -1,
+        purchaseprice: '',
+        saleprice: '',
+        family: -1,
+        subfamily: -1,
+        submit: null
+      }, event);
 };
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -86,21 +63,26 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 const NewItem: FC<NewItemProps> = ({
     families,
-    subFamilies,
     units,
     event,
     _getInitialData,
     onAddComplete,
     onCancel,
     onDeleteComplete,
-    onEditComplete,
-  range
+    onEditComplete
 }) => {
     const classes = useStyles();
     const dispatch = useDispatch();
 
     const isCreating = !event;
     const [isModalOpen3, setIsModalOpen3] = useState(false);
+    const [subFamilies, setSubFamilies] = useState<any>([]);
+
+    const _getSubFamilies = (family) => {
+        getSubFamilies(family).then(res => {
+            setSubFamilies(res);
+        })
+    }
 
     const handleDelete = async (): Promise<void> => {
         try {
@@ -117,327 +99,296 @@ const NewItem: FC<NewItemProps> = ({
     const handleModalOpen3 = (): void => {
         setIsModalOpen3(true);
     };
-
+    
     return (
         <>
             <Formik
-            initialValues={getInitialValues(event, range)}
-            validationSchema={Yup.object().shape({
-                allDay: Yup.bool(),
-                description: Yup.string().max(5000),
-                end: Yup.date()
-                .when(
-                    'start',
-                    (start: Date, schema: any) => (start && schema.min(start, 'End date must be later than start date'))
-                ),
-                start: Yup.date(),
-                title: Yup.string().max(255).required('Title is required')
-            })}
-            onSubmit={async (values, {
-                resetForm,
-                setErrors,
-                setStatus,
-                setSubmitting
-            }) => {
-                try {
-                const data = {
-                    allDay: values.allDay,
-                    description: values.description,
-                    end: values.end,
-                    start: values.start,
-                    title: values.title
-                };
+                initialValues={getInitialValues(event)}
+                validationSchema={Yup.object().shape({
+                    code: Yup.string().max(5000).required('Se requiere el código'),
+                    description: Yup.string().max(5000).required('Se requiere una descripción'),
+                    unit: Yup.string().min(0).max(5000).required('Se requiere unidad de medida'),
+                    purchaseprice: Yup.number().required('Se requiere el precio de compra'),
+                    saleprice: Yup.number().required('Se requiere el Precio de Venta'),
+                    family: Yup.number().min(1).required('Se requiere el familia'),
+                    subfamily: Yup.number().min(1).required('Se requiere el subFamilia')
+                })}
+                onSubmit={async (values, {
+                    resetForm,
+                    setErrors,
+                    setStatus,
+                    setSubmitting
+                }) => {
+                    try {
+                    const data = {
+                        code: values.code,
+                        unit: values.unit,
+                        description: values.description,
+                        purchaseprice: values.purchaseprice,
+                        saleprice: values.saleprice,
+                        family: values.family,
+                        subfamily: values.subfamily,
+                    };
 
-                resetForm();
-                setStatus({ success: true });
-                setSubmitting(false);
+                    await saveItem(data);
+                    
+                    resetForm();
+                    setStatus({ success: true });
+                    setSubmitting(false);
 
-                if (isCreating) {
-                    onAddComplete();
-                } else {
-                    onEditComplete();
-                }
-                } catch (err) {
-                console.error(err);
-                setStatus({ success: false });
-                setErrors({ submit: err.message });
-                setSubmitting(false);
-                }
-            }}
+                    if (isCreating) {
+                        onAddComplete();
+                    } else {
+                        onEditComplete();
+                    }
+                    } catch (err) {
+                    console.error(err);
+                    setStatus({ success: false });
+                    setErrors({ submit: err.message });
+                    setSubmitting(false);
+                    }
+                }}
             >
-            {({
-                errors,
-                handleBlur,
-                handleChange,
-                handleSubmit,
-                isSubmitting,
-                setFieldTouched,
-                setFieldValue,
-                touched,
-                values
-            }) => (
-                <form onSubmit={handleSubmit}>
-                <Box p={3}>
-                    <Typography
-                    align="center"
-                    gutterBottom
-                    variant="h4"
-                    color="textPrimary"
-                    >
-                    {'Agregar ítem nuevo'}
-                    </Typography>
-                </Box>
-                <Box p={3}>            
-                    <Grid
-                        container
-                        spacing={3}
-                    >
-                        <Grid
-                            item
-                            lg={12}
-                            sm={12}
-                            xs={12}
-                        >
-                            <TextField
-                                size="small"
-                                error={Boolean(touched.title && errors.title)}
-                                fullWidth
-                                helperText={touched.title && errors.title}
-                                label="Código"
-                                name="title"
-                                onBlur={handleBlur}
-                                onChange={handleChange}
-                                value={values.title}
-                                variant="outlined"
-                            />
-                        </Grid>
-                    </Grid>
-                    <Grid
-                        container
-                        spacing={3}
-                    >
-                        <Grid
-                            item
-                            lg={6}
-                            sm={6}
-                            xs={12}
-                        >  
-                            <TextField
-                                size="small"
-                                error={Boolean(touched.description && errors.description)}
-                                fullWidth
-                                helperText={touched.description && errors.description}
-                                label="Descripción"
-                                name="description"
-                                onBlur={handleBlur}
-                                onChange={handleChange}
-                                value={values.description}
-                                variant="outlined"
-                            />                    
-                        </Grid>
-                        <Grid
-                            item
-                            lg={6}
-                            sm={6}
-                            xs={12}
-                            style={{display: 'flex'}}
-                        >
-                            <TextField
-                                size="small"
-                                label="Unidad de Medida"
-                                name="availability"
-                                fullWidth
-                                SelectProps={{ native: true }}
-                                select
-                                variant="outlined"
-                                >
-                                <option disabled selected key="-1" value="-1">{'-- Seleccionar --'}</option>
-                                {units.map((unit) => (
-                                    <option
-                                    key={unit.und_c_yid}
-                                    value={unit.und_c_yid}
+                {({
+                    errors,
+                    handleBlur,
+                    handleChange,
+                    handleSubmit,
+                    isSubmitting,
+                    setFieldTouched,
+                    setFieldValue,
+                    touched,
+                    values
+                }) => (
+                    <form onSubmit={handleSubmit}>
+                        <Box p={3}>
+                            <Typography
+                            align="center"
+                            gutterBottom
+                            variant="h4"
+                            color="textPrimary"
+                            >
+                            {'Agregar ítem nuevo'}
+                            </Typography>
+                        </Box>
+                        <Box p={3}>            
+                            <Grid container spacing={3}>
+                                <Grid item lg={12} sm={12} xs={12}>
+                                    <TextField
+                                        size="small"
+                                        error={Boolean(touched.code && errors.code)}
+                                        fullWidth
+                                        helperText={touched.code && errors.code}
+                                        label="Código"
+                                        name="code"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.code}
+                                        variant="outlined"
+                                    />
+                                </Grid>
+                            </Grid>
+                            <Grid
+                                container
+                                spacing={3}
+                            >
+                                <Grid item lg={6} sm={6} xs={12}>  
+                                    <TextField
+                                        size="small"
+                                        error={Boolean(touched.description && errors.description)}
+                                        fullWidth
+                                        helperText={touched.description && errors.description}
+                                        label="Descripción"
+                                        name="description"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.description}
+                                        variant="outlined"
+                                    />                    
+                                </Grid>
+                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
+                                    <TextField
+                                        size="small"
+                                        error={Boolean(touched.unit && errors.unit)}
+                                        helperText={touched.unit && errors.unit}
+                                        label="Unidad de Medida"
+                                        name="unit"
+                                        fullWidth
+                                        SelectProps={{ native: true }}
+                                        select
+                                        variant="outlined"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.unit}
+                                        >
+                                        <option disabled selected key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                        {units.map((unit) => (
+                                            <option
+                                            key={unit.und_c_yid}
+                                            value={unit.und_c_yid}
+                                            >
+                                            {unit.und_c_vdesc}
+                                            </option>
+                                        ))}
+                                    </TextField>
+                                    <IconButton 
+                                        size="small" 
+                                        color="secondary" 
+                                        aria-label="add to shopping cart"
+                                        onClick={() => handleModalOpen3()}
                                     >
-                                    {unit.und_c_vdesc}
-                                    </option>
-                                ))}
-                            </TextField>
-                            <IconButton 
-                                size="small" 
-                                color="secondary" 
-                                aria-label="add to shopping cart"
-                                onClick={() => handleModalOpen3()}
-                            >
-                                <AddIcon2 />
-                            </IconButton>
-                        </Grid>
-                    </Grid>
-                    <Grid
-                        container
-                        spacing={3}
-                    >
-                        <Grid
-                            item
-                            lg={6}
-                            sm={6}
-                            xs={12}
-                        >  
-                            <TextField
-                                size="small"
-                                error={Boolean(touched.description && errors.description)}
-                                fullWidth
-                                helperText={touched.description && errors.description}
-                                label="Precio de Compra"
-                                name="description"
-                                onBlur={handleBlur}
-                                onChange={handleChange}
-                                value={values.description}
-                                variant="outlined"
-                            />                    
-                        </Grid>
-                        <Grid
-                        item
-                        lg={6}
-                        sm={6}
-                        xs={12}
-                        >
-                            <TextField
-                                size="small"
-                                error={Boolean(touched.title && errors.title)}
-                                fullWidth
-                                helperText={touched.title && errors.title}
-                                label="Precio de Venta"
-                                name="title"
-                                onBlur={handleBlur}
-                                onChange={handleChange}
-                                value={values.title}
-                                variant="outlined"
-                            />
-                        </Grid>
-                    </Grid>
-                    <Grid
-                        container
-                        spacing={3}
-                    >
-                        <Grid
-                            item
-                            lg={6}
-                            sm={6}
-                            xs={12}
-                            style={{display: 'flex'}}
-                        >
-                            <TextField
-                                size="small"
-                                label="Familia"
-                                name="availability"
-                                fullWidth
-                                SelectProps={{ native: true }}
-                                select
-                                variant="outlined"
-                            >
-                                <option disabled selected key="-1" value="-1">{'-- Seleccionar --'}</option>
-                                {families.map((family) => (
-                                    <option
-                                    key={family.ifm_c_iid}
-                                    value={family.ifm_c_iid}
+                                        <AddIcon2 />
+                                    </IconButton>
+                                </Grid>
+                            </Grid>
+                            <Grid container spacing={3}>
+                                <Grid item lg={6} sm={6} xs={12}>  
+                                    <TextField
+                                        size="small"
+                                        error={Boolean(touched.purchaseprice && errors.purchaseprice)}
+                                        fullWidth
+                                        helperText={touched.purchaseprice && errors.purchaseprice}
+                                        label="Precio de Compra"
+                                        name="purchaseprice"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.purchaseprice}
+                                        variant="outlined"
+                                    />                    
+                                </Grid>
+                                <Grid item lg={6} sm={6} xs={12} >
+                                    <TextField
+                                        size="small"
+                                        error={Boolean(touched.saleprice && errors.saleprice)}
+                                        fullWidth
+                                        helperText={touched.saleprice && errors.saleprice}
+                                        label="Precio de Venta"
+                                        name="saleprice"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.saleprice}
+                                        variant="outlined"
+                                    />
+                                </Grid>
+                            </Grid>
+                            <Grid container spacing={3}>
+                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
+                                    <TextField
+                                        size="small"
+                                        label="Familia"
+                                        name="family"
+                                        error={Boolean(touched.family && errors.family)}
+                                        helperText={touched.family && errors.family}
+                                        fullWidth
+                                        SelectProps={{ native: true }}
+                                        select
+                                        onBlur={handleBlur}
+                                        onChange={(e) => {
+                                            console.log(e.target.value)
+                                            _getSubFamilies(e.target.value);
+                                            handleChange(e);
+                                        }}
+                                        value={values.family}
+                                        variant="outlined"
                                     >
-                                    {family.ifm_c_des}
-                                    </option>
-                                ))}
-                            </TextField>
-                            <IconButton 
-                                size="small" 
-                                color="secondary" 
-                                aria-label="add to shopping cart"
-                                onClick={() => handleModalOpen3()}
-                            >
-                                <AddIcon2 />
-                            </IconButton>
-                        </Grid>
-                        <Grid
-                            item
-                            lg={6}
-                            sm={6}
-                            xs={12}
-                            style={{display: 'flex'}}
-                        >
-                            <TextField
-                                size="small"
-                                label="SubFamilia"
-                                name="availability"
-                                fullWidth
-                                SelectProps={{ native: true }}
-                                select
-                                variant="outlined"
-                                >
-                                <option disabled  selected key="-1" value="-1">{'-- Seleccionar --'}</option>
-                                {subFamilies.map((subFamily) => (
-                                    <option
-                                    key={subFamily.isf_c_iid}
-                                    value={subFamily.isf_c_iid}
+                                        <option disabled selected key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                        {families.map((family) => (
+                                            <option
+                                            key={family.ifm_c_iid}
+                                            value={family.ifm_c_iid}
+                                            >
+                                            {family.ifm_c_des}
+                                            </option>
+                                        ))}
+                                    </TextField>
+                                    <IconButton 
+                                        size="small" 
+                                        color="secondary" 
+                                        aria-label="add to shopping cart"
+                                        onClick={() => handleModalOpen3()}
                                     >
-                                    {subFamily.isf_c_vdesc}
-                                    </option>
-                                ))}
-                            </TextField>
-                            <IconButton 
-                                size="small" 
-                                color="secondary" 
-                                aria-label="add to shopping cart"
-                                onClick={() => handleModalOpen3()}
-                            >
-                                <AddIcon2 />
-                            </IconButton>
-                        </Grid>
-                    </Grid>
-                    <Box mt={2}>
-                    <FormControlLabel
-                        control={(
-                        <Switch
-                            checked={values.allDay}
-                            name="allDay"
-                            onChange={handleChange}
-                        />
+                                        <AddIcon2 />
+                                    </IconButton>
+                                </Grid>
+                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
+                                    <TextField
+                                        size="small"
+                                        label="SubFamilia"
+                                        name="subfamily"
+                                        error={Boolean(touched.subfamily && errors.subfamily)}
+                                        helperText={touched.subfamily && errors.subfamily}
+                                        fullWidth
+                                        SelectProps={{ native: true }}
+                                        select
+                                        variant="outlined"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.subfamily}
+                                        >
+                                        <option disabled  selected key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                        {subFamilies.map((subFamily) => (
+                                            <option
+                                            key={subFamily.isf_c_iid}
+                                            value={subFamily.isf_c_iid}
+                                            >
+                                            {subFamily.isf_c_vdesc}
+                                            </option>
+                                        ))}
+                                    </TextField>
+                                    <IconButton 
+                                        size="small" 
+                                        color="secondary" 
+                                        aria-label="add to shopping cart"
+                                        onClick={() => handleModalOpen3()}
+                                    >
+                                        <AddIcon2 />
+                                    </IconButton>
+                                </Grid>
+                            </Grid>
+                            {Boolean(touched.end && errors.end) && (
+                            <Box mt={2}>
+                                <FormHelperText error>
+                                {errors.end}
+                                </FormHelperText>
+                            </Box>
+                            )}
+                        </Box>
+                        <Divider />
+                        {errors.submit && (
+                            <Box mt={3}>
+                            <FormHelperText error>
+                                {errors.submit}
+                            </FormHelperText>
+                            </Box>
                         )}
-                        label="All day"
-                    />
-                    </Box>
-                    {Boolean(touched.end && errors.end) && (
-                    <Box mt={2}>
-                        <FormHelperText error>
-                        {errors.end}
-                        </FormHelperText>
-                    </Box>
-                    )}
-                </Box>
-                <Divider />
-                <Box
-                    p={2}
-                    display="flex"
-                    alignItems="center"
-                >
-                    {!isCreating && (
-                    <IconButton onClick={() => handleDelete()}>
-                        <SvgIcon>
-                        <TrashIcon />
-                        </SvgIcon>
-                    </IconButton>
-                    )}
-                    <Box flexGrow={1} />
-                    <Button onClick={onCancel}>
-                    Cancel
-                    </Button>
-                    <Button
-                    variant="contained"
-                    type="submit"
-                    disabled={isSubmitting}
-                    color="secondary"
-                    className={classes.confirmButton}
-                    >
-                    Confirm
-                    </Button>
-                </Box>
-                </form>
-            )}
+                        <Box
+                            p={2}
+                            display="flex"
+                            alignItems="center"
+                        >
+                            {!isCreating && (
+                            <IconButton onClick={() => handleDelete()}>
+                                <SvgIcon>
+                                <TrashIcon />
+                                </SvgIcon>
+                            </IconButton>
+                            )}
+                            <Box flexGrow={1} />
+                            <Button onClick={onCancel}>
+                            Cancel
+                            </Button>
+                            <Button
+                            variant="contained"
+                            type="submit"
+                            disabled={isSubmitting}
+                            color="secondary"
+                            className={classes.confirmButton}
+                            >
+                            Confirm
+                            </Button>
+                        </Box>
+                    </form>
+                )}
             </Formik>
             <Dialog
                 maxWidth="sm"
@@ -445,7 +396,6 @@ const NewItem: FC<NewItemProps> = ({
                 onClose={handleModalClose3}
                 open={isModalOpen3}
             >
-                {/* Dialog renders its body even if not open */}
                 {isModalOpen3 && (
                 <NewCategory
                     families={families}

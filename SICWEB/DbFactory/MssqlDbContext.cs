@@ -117,8 +117,9 @@ namespace SICWEB.DbFactory
         public DbSet<T_SEGMENTO> SEGMENTO { get; set; }
         public DbSet<T_PRODUCTO_PARTIDA> PRODUCTO_PARTIDA { get; set; }
         public DbSet<T_UNIDAD_MEDIDA> UNIDAD_MEDIDA { get; set; }
+        public DbSet<T_ITEM> ITEM { get; set; }
 
-        
+
         public MaintenanceMssqlDbContext(DbContextOptions<MaintenanceMssqlDbContext> options) : base(options)
         {
 
@@ -147,6 +148,12 @@ namespace SICWEB.DbFactory
             builder.Entity<T_UNIDAD_MEDIDA>().ToTable(Prefix + "T_UNIDAD_MEDIDA", Schema);
             builder.Entity<T_UNIDAD_MEDIDA>().HasKey(p => p.und_c_yid);
             //builder.Entity<T_UNIDAD_MEDIDA>().Property(p => p.und_c_yid).ValueGeneratedOnAdd();
+
+
+            builder.Entity<T_ITEM>().ToTable(Prefix + "T_ITEM", Schema);
+            builder.Entity<T_ITEM>().HasKey(p => p.itm_c_iid);
+            builder.Entity<T_ITEM>().Property(p => p.itm_c_iid).ValueGeneratedOnAdd();
+
 
             //builder.Entity<T_ITEM_FAMILIA>().HasMany(p => p.T_ITEM_SUB_FAMILIAS).WithOne().HasForeignKey(c => c.isf_c_ifm_iid).HasPrincipalKey(p => p.ifm_c_iid);
 

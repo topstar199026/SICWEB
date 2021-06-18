@@ -15,7 +15,7 @@ import SaveIcon from '@material-ui/icons/Save';
 
 interface LoadingModalProps {
   isModalOpen?: boolean;
-  handleModalClose: () => void;
+  handleModalClose?: () => void;
 }
 
 const useStyles = makeStyles((theme) => ({

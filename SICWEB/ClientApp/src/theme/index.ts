@@ -33,6 +33,7 @@ interface ThemeConfig {
   direction?: Direction;
   responsiveFontSizes?: boolean;
   theme?: string;
+  saving?: boolean;
 }
 
 interface ThemeOptions { 

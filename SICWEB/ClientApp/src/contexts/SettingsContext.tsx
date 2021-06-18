@@ -11,6 +11,7 @@ interface Settings {
   direction?: 'ltr' | 'rtl';
   responsiveFontSizes?: boolean;
   theme?: string;
+  saving?: boolean;
 }
 
 export interface SettingsContextValue {
@@ -26,7 +27,8 @@ interface SettingsProviderProps {
 const defaultSettings: Settings = {
   direction: 'ltr',
   responsiveFontSizes: true,
-  theme: THEMES.ONE_DARK
+  theme: THEMES.ONE_DARK,
+  saving: false
 };
 
 export const restoreSettings = (): Settings | null => {

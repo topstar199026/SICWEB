@@ -38,8 +38,10 @@ import type { Theme } from 'src/theme';
 import Label from 'src/components/Label';
 import type { Product, InventoryType } from 'src/types/product';
 import NewItem from './NewItem';
-import LoadingModal from 'src/components/LoadingModal';
-import {getFamilies, getSubFamilies, getUnits} from 'src/apis/itemApi'
+import {getFamilies, getSubFamilies, getUnits} from 'src/apis/itemApi';
+import useSettings from 'src/hooks/useSettings';
+
+
 interface TablesProps {
   className?: string;
   products: Product[];
@@ -230,6 +232,14 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
   const classes = useStyles();
+  
+  const { settings } = useSettings();
+  const [values, setValues] = useState({
+    direction: settings.direction,
+    responsiveFontSizes: settings.responsiveFontSizes,
+    theme: settings.theme
+  });
+  
   const [families, setFamilies] = useState<any>([]);
   const [subFamilies, setSubFamilies] = useState<any>([]);
   const [units, setUnits] = useState<any>([]);
@@ -265,9 +275,9 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
   }
 
   const _getSubFamilies = () => {
-    getSubFamilies().then(res => {
-      setSubFamilies(res);
-    });
+    // getSubFamilies().then(res => {
+    //   setSubFamilies(res);
+    // });
   }
 
   const _getUnits = () => {
@@ -652,10 +662,6 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
           />
         )}
       </Dialog>
-      <LoadingModal 
-        isModalOpen={isModalOpen2}
-        handleModalClose={handleModalClose2}
-      />
     </Card>
   );
 };

@@ -43,14 +43,14 @@ namespace SICWEB.Controllers
             }
         }
         
-        [HttpGet]
+        [HttpPost]
         [Authorize(Roles = "cliente")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult subfamilies()
+        public IActionResult subfamilies([FromBody] IdKey key)
         {
             if (_engine.Equals("MSSQL"))
             {
-                return Ok(_context_MS.ITEM_SUB_FAMILIA.ToArray());
+                return Ok(_context_MS.ITEM_SUB_FAMILIA.Where(c => c.isf_c_ifm_iid.Equals(key.id)).ToArray());
             }
             else
             {
@@ -113,6 +113,38 @@ namespace SICWEB.Controllers
                 _subFmily.isf_c_bactivo = true;
                 _context_MS.ITEM_SUB_FAMILIA.Add(_subFmily);
                 _context_MS.SaveChanges();
+                return Ok();
+            }
+            else
+            {
+                return Ok();
+            }
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Saveitem([FromBody] NewItem item)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+                //if (_context_MS.ITEM_SUB_FAMILIA.Where(u => u.isf_c_vdesc.Equals(newSubFamily.subfamily) && u.isf_c_ifm_iid.Equals(newSubFamily.family)).Any())
+                //    return Ok();
+                //return Task.FromResult(Ok(_context_MS.UNIDAD_MEDIDA.ToArray()));
+                T_ITEM _item = new();
+                _item.itm_c_ccodigo = item.code;
+                _item.itm_c_vdescripcion = item.description;
+
+                _item.itm_c_dprecio_compra = item.purchaseprice;
+                _item.itm_c_dprecio_venta = item.saleprice;
+                _item.und_c_yid = item.unit;
+
+                //_subFmily.isf_c_ifm_iid = newSubFamily.family;
+                //_subFmily.isf_c_vdesc = newSubFamily.subfamily;
+                //_subFmily.isf_c_bactivo = true;
+                //_context_MS.ITEM_SUB_FAMILIA.Add(_subFmily);
+                //_context_MS.SaveChanges();
                 return Ok();
             }
             else

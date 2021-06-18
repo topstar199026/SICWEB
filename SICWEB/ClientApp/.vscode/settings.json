@@ -5,7 +5,9 @@
         "formik",
         "initialise",
         "nprogress",
+        "purchaseprice",
         "reduxjs",
+        "saleprice",
         "savefamilies",
         "vnomb"
     ]

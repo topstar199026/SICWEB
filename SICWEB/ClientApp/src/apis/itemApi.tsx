@@ -6,8 +6,8 @@ export const getFamilies = async () => {
     else return [];
 }
 
-export const getSubFamilies = async () => {
-    const response = await axios.get<{}>('/api/item/subfamilies', { });
+export const getSubFamilies = async (family) => {
+    const response = await axios.post<{}>('/api/item/subfamilies', {id: family});
     if(response.status === 200) return response.data;
     else return [];
 }
@@ -30,8 +30,14 @@ export const saveSubFamily = async (family, subFamily) => {
     else return [];
 }
 
-export const saveUnit = async ({unit}) => {
+export const saveUnit = async (unit) => {
     const response = await axios.post<{}>('/api/item/saveunit', {unit});
+    if(response.status === 200) return response.data;
+    else return [];
+}
+
+export const saveItem = async (saveItem) => {
+    const response = await axios.post<{}>('/api/item/saveitem', saveItem);
     if(response.status === 200) return response.data;
     else return [];
 }
