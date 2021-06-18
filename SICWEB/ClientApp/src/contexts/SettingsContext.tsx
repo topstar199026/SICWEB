@@ -70,13 +70,16 @@ export const SettingsProvider: FC<SettingsProviderProps> = ({ settings, children
 
   useEffect(() => {
     const restoredSettings = restoreSettings();
-
     if (restoredSettings) {
-      setCurrentSettings(restoredSettings);
+      setCurrentSettings({
+        ...restoredSettings,
+        saving: false
+      });
     }
   }, []);
 
   useEffect(() => {
+    console.log(currentSettings)
     document.dir = currentSettings.direction;
   }, [currentSettings]);
 

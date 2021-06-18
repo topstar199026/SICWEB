@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core';
 import useSettings from 'src/hooks/useSettings';
@@ -41,8 +41,12 @@ const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
   const classes = useStyles();
   const { settings } = useSettings();
 
-  const [isSaveModalOpen] = useState(settings.saving);
-  console.log('isSaveModalOpen', isSaveModalOpen)
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+
+  useEffect(() => {    
+    console.log('settings,settings',settings)
+    setIsSaveModalOpen(settings.saving);
+  }, [settings])
   return (
     <div className={classes.root}>
       <TopBar />

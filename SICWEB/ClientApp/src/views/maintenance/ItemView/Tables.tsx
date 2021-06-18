@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react';
 import type {
-  FC,
-  ChangeEvent
-} from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+  FC} from 'react';
 import clsx from 'clsx';
-import numeral from 'numeral';
 import PropTypes from 'prop-types';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import {
@@ -13,32 +9,24 @@ import {
   Button,
   Card,
   Checkbox,
-  IconButton,
-  Link,
-  SvgIcon,
   Table,
   TableBody,
   TableCell,
   TableHead,
-  TablePagination,
   TableRow,
   TextField,
   makeStyles,
-  Dialog
+  Dialog,
+  Grid
 } from '@material-ui/core';
-import {
-  Image as ImageIcon,
-  Edit as EditIcon,
-  ArrowRight as ArrowRightIcon} from 'react-feather';
 
 import SearchIcon2 from '@material-ui/icons/Search';
 import AddIcon2 from '@material-ui/icons/Add';
 
 import type { Theme } from 'src/theme';
-import Label from 'src/components/Label';
-import type { Product, InventoryType } from 'src/types/product';
+import type { Product } from 'src/types/product';
 import NewItem from './NewItem';
-import {getFamilies, getSubFamilies, getUnits} from 'src/apis/itemApi';
+import {getSegments, getFamilies, getUnits, getProducts, getSubFamilies, getItem} from 'src/apis/itemApi';
 import useSettings from 'src/hooks/useSettings';
 
 
@@ -53,44 +41,6 @@ interface Filters {
   inStock?: boolean;
   isShippable?: boolean;
 }
-
-const categoryOptions = [
-  {
-    id: 'all',
-    name: 'All'
-  },
-  {
-    id: 'dress',
-    name: 'Dress'
-  },
-  {
-    id: 'jewelry',
-    name: 'Jewelry'
-  },
-  {
-    id: 'blouse',
-    name: 'Blouse'
-  },
-  {
-    id: 'beauty',
-    name: 'Beauty'
-  }
-];
-
-const avalabilityOptions = [
-  {
-    id: 'all',
-    name: 'All'
-  },
-  {
-    id: 'available',
-    name: 'Available'
-  },
-  {
-    id: 'unavailable',
-    name: 'Unavailable'
-  }
-];
 
 const sortOptions = [
   {
@@ -111,68 +61,6 @@ const sortOptions = [
   }
 ];
 
-const getInventoryLabel = (inventoryType: InventoryType): JSX.Element => {
-  const map = {
-    in_stock: {
-      text: 'In Stock',
-      color: 'success'
-    },
-    limited: {
-      text: 'Limited',
-      color: 'warning'
-    },
-    out_of_stock: {
-      text: 'Out of Stock',
-      color: 'error'
-    }
-  };
-
-  const { text, color }: any = map[inventoryType];
-
-  return (
-    <Label color={color}>
-      {text}
-    </Label>
-  );
-};
-
-const applyFilters = (products: Product[], query: string, filters: Filters): Product[] => {
-  return products.filter((product) => {
-    let matches = true;
-
-    if (query && !product.name.toLowerCase().includes(query.toLowerCase())) {
-      matches = false;
-    }
-
-    if (filters.category && product.category !== filters.category) {
-      matches = false;
-    }
-
-    if (filters.availability) {
-      if (filters.availability === 'available' && !product.isAvailable) {
-        matches = false;
-      }
-
-      if (filters.availability === 'unavailable' && product.isAvailable) {
-        matches = false;
-      }
-    }
-
-    if (filters.inStock && !['in_stock', 'limited'].includes(product.inventoryType)) {
-      matches = false;
-    }
-
-    if (filters.isShippable && !product.isShippable) {
-      matches = false;
-    }
-
-    return matches;
-  });
-};
-
-const applyPagination = (products: Product[], page: number, limit: number): Product[] => {
-  return products.slice(page * limit, page * limit + limit);
-};
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {},
@@ -230,7 +118,7 @@ const useStyles = makeStyles((theme: Theme) => ({
   }
 }));
 
-const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
+const Tables: FC<TablesProps> = ({ className, ...rest }) => {
   const classes = useStyles();
   
   const { settings } = useSettings();
@@ -240,23 +128,20 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
     theme: settings.theme
   });
   
+  const [segments, setSegments] = useState<any>([]);
+  const [products, setProducts] = useState<any>([]);
   const [families, setFamilies] = useState<any>([]);
   const [subFamilies, setSubFamilies] = useState<any>([]);
   const [units, setUnits] = useState<any>([]);
 
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [page, setPage] = useState<number>(0);
-  const [limit, setLimit] = useState<number>(10);
-  const [query, setQuery] = useState<string>('');
-  const [sort, setSort] = useState<string>(sortOptions[0].value);
-  const [filters, setFilters] = useState<Filters>({
-    category: null,
-    availability: null,
-    inStock: null,
-    isShippable: null
+  const [filters, setFilters] = useState({
+    code: '',
+    description: '',
+    family: null,
+    subFamily: null,
   });
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalOpen2, setIsModalOpen2] = useState(false);
 
   useEffect(() => {
@@ -264,20 +149,36 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
   }, [])
 
   const _getInitialData = () => {
-    _getFamilies();
-    _getSubFamilies();   
+    _getSegments();
+    _getProducts();
+    _getFamilies(); 
     _getUnits();
   }
+
+  const _getSegments = () => {
+    getSegments().then(res => {
+      setSegments(res);
+    });
+  }
+
+  const _getProducts = () => {
+    getProducts().then(res => {
+      setProducts(res);
+    });
+  }
+
   const _getFamilies = () => {
     getFamilies().then(res => {
       setFamilies(res);
     });
   }
 
-  const _getSubFamilies = () => {
-    // getSubFamilies().then(res => {
-    //   setSubFamilies(res);
-    // });
+  const _getSubFamilies = (fid) => {
+    getSubFamilies(fid).then(res => {
+      setSubFamilies(res);
+    }).catch(err => {
+      setSubFamilies([]);
+    });
   }
 
   const _getUnits = () => {
@@ -286,240 +187,115 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
     });
   }
 
-  const handleQueryChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    event.persist();
-    setQuery(event.target.value);
-  };
-
-  const handleCategoryChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    event.persist();
-
-    let value = null;
-
-    if (event.target.value !== 'all') {
-      value = event.target.value;
-    }
-
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      category: value
-    }));
-  };
-
-  const handleAvailabilityChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    event.persist();
-
-    let value = null;
-
-    if (event.target.value !== 'all') {
-      value = event.target.value;
-    }
-
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      availability: value
-    }));
-  };
-
-  const handleStockChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    event.persist();
-
-    let value = null;
-
-    if (event.target.checked) {
-      value = true;
-    }
-
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      inStock: value
-    }));
-  };
-
-  const handleShippableChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    event.persist();
-
-    let value = null;
-
-    if (event.target.checked) {
-      value = true;
-    }
-
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      isShippable: value
-    }));
-  };
-
-  const handleSortChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    event.persist();
-    setSort(event.target.value);
-  };
-
-  const handleSelectAllProducts = (event: ChangeEvent<HTMLInputElement>): void => {
-    setSelectedProducts(event.target.checked
-      ? products.map((product) => product.id)
-      : []);
-  };
-
-  const handleSelectOneProduct = (event: ChangeEvent<HTMLInputElement>, productId: string): void => {
-    if (!selectedProducts.includes(productId)) {
-      setSelectedProducts((prevSelected) => [...prevSelected, productId]);
-    } else {
-      setSelectedProducts((prevSelected) => prevSelected.filter((id) => id !== productId));
-    }
-  };
-
-  const handlePageChange = (event: any, newPage: number): void => {
-    setPage(newPage);
-  };
-
-  const handleLimitChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    setLimit(parseInt(event.target.value));
-  };
-
   const handleModalClose = (): void => {
     setIsModalOpen(false);
   };
 
-  const handleModalClose2 = (): void => {
-    setIsModalOpen2(false);
-  };
-
-  // Usually query is done on backend with indexing solutions
-  const filteredProducts = applyFilters(products, query, filters);
-  const paginatedProducts = applyPagination(filteredProducts, page, limit);
-  const enableBulkOperations = selectedProducts.length > 0;
-  const selectedSomeProducts = selectedProducts.length > 0 && selectedProducts.length < products.length;
-  const selectedAllProducts = selectedProducts.length === products.length;
+  const handleSearch =() => {
+    console.log(filters)
+    getItem(filters).then(res => {
+      console.log(res)
+    })
+  }
 
   return (
     <Card
       className={clsx(classes.root, className)}
       {...rest}
     >
-      <Box
-        p={2}
-        display="flex"
-        alignItems="center"
-      >
-        <Box
-        >
-          <Box
-            p={1}
-          >
-            <TextField
-              className={classes.queryField}
-              // InputProps={{
-              //   style: {
-              //     height: 40
-              //   }
-              // }}
-              size="small"
-              onChange={handleQueryChange}
-              label="Código"
-              placeholder=""
-              value={query}
-              variant="outlined"
-            />
-            <TextField
-              className={clsx(classes.queryField, classes.queryFieldMargin)}
-              size="small"
-              onChange={handleQueryChange}
-              label="Descripción"
-              placeholder=""
-              value={query}
-              variant="outlined"
-            />
-          </Box>
-          <Box flexGrow={1} />
-          <Box
-           p={1}
-          >
-            <TextField
-              className={classes.categoryField}
-              size="small"
-              label="Familia"
-              name="category"
-              onChange={handleCategoryChange}
-              select
-              SelectProps={{ native: true }}
-              value={filters.category || 'all'}
-              variant="outlined"
-            >
-              <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
-              {families.map((family) => (
-                <option
-                  key={family.ifm_c_iid}
-                  value={family.ifm_c_iid}
+      <Box p={3} alignItems="center">
+        <Grid container spacing={3}>
+          <Grid item lg={4} sm={6} xs={12}>
+            <Grid container spacing={3}>
+              <Grid item lg={6} sm={6} xs={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Código"
+                  placeholder=""
+                  variant="outlined"
+                  value={filters.code}
+                  onChange={(e) => setFilters({...filters, code: e.target.value})}
+                />
+              </Grid>
+              <Grid item lg={6} sm={6} xs={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Descripción"
+                  placeholder=""
+                  variant="outlined"
+                  value={filters.description}
+                  onChange={(e) => setFilters({...filters, description: e.target.value})}
+                />
+              </Grid>
+              <Grid item lg={6} sm={6} xs={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Familia"
+                  select
+                  SelectProps={{ native: true }}
+                  variant="outlined"
+                  value={filters.family || -1}
+                  onChange={(e) => {
+                    setFilters({...filters, 
+                      family: e.target.value,
+                      subFamily: -1
+                    })
+                    _getSubFamilies(e.target.value);
+                  }}
                 >
-                  {family.ifm_c_des}
-                </option>
-              ))}
-            </TextField>
-            <TextField
-              className={classes.availabilityField}
-              size="small"
-              label="SubFamilia"
-              name="availability"
-              onChange={handleAvailabilityChange}
-              select
-              SelectProps={{ native: true }}
-              value={filters.availability || 'all'}
-              variant="outlined"
-            >
-              <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
-              {subFamilies.map((subFamily) => (
-                <option
-                  key={subFamily.isf_c_iid}
-                  value={subFamily.isf_c_iid}
+                  <option key="-1" value="-1">{'-- Seleccionar --'}</option>
+                  {families.map((family) => (
+                    <option
+                      key={family.ifm_c_iid}
+                      value={family.ifm_c_iid}
+                    >
+                      {family.ifm_c_des}
+                    </option>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item lg={6} sm={6} xs={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="SubFamilia"
+                  name="availability"
+                  select
+                  SelectProps={{ native: true }}
+                  variant="outlined"
+                  value={filters.subFamily || -1}
+                  onChange={(e) => setFilters({...filters, subFamily: e.target.value})}
                 >
-                  {subFamily.isf_c_vdesc}
-                </option>
-              ))}
-            </TextField>
-            
-          </Box>
-        </Box>
-        <Box flexGrow={1} />
-        <Box
-        >
-          <Box
-           className={classes.buttonBox}
-          >
-            <Button variant="contained" color="primary" startIcon={<SearchIcon2 />}>{'Buscar'}</Button>
-            <Button variant="contained" color="secondary" startIcon={<AddIcon2 />} onClick={() => setIsModalOpen(true)}>{'Nuevo'}</Button>
-          </Box>
-          <Box
-          >
-            
-          </Box>
-
-        </Box>
-      </Box>
-      {enableBulkOperations && (
-        <div className={classes.bulkOperations}>
-          <div className={classes.bulkActions}>
-            <Checkbox
-              checked={selectedAllProducts}
-              indeterminate={selectedSomeProducts}
-              onChange={handleSelectAllProducts}
-            />
-            <Button
-              variant="outlined"
-              className={classes.bulkAction}
-            >
-              Delete
-            </Button>
-            <Button
-              variant="outlined"
-              className={classes.bulkAction}
-            >
-              Edit
-            </Button>
-          </div>
-        </div>
-      )}
+                  <option key="-1" value="-1">{'-- Seleccionar --'}</option>
+                    
+                  {subFamilies.map((subFamily) => (
+                    <option
+                      key={subFamily.isf_c_iid}
+                      value={subFamily.isf_c_iid}
+                    >
+                      {subFamily.isf_c_vdesc}
+                    </option>
+                  ))}
+                </TextField>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item lg={4} sm={3} xs={12} ><></></Grid>
+          <Grid item lg={4} sm={3} xs={12}>
+            <Grid container spacing={3}>
+              <Grid item>
+                <Button onClick={handleSearch} variant="contained" color="primary" startIcon={<SearchIcon2 />}>{'Buscar'}</Button>
+              </Grid>
+              <Grid item>
+                <Button variant="contained" color="secondary" startIcon={<AddIcon2 />} onClick={() => setIsModalOpen(true)}>{'Nuevo'}</Button>
+              </Grid>
+            </Grid>
+          </Grid>      
+        </Grid>
+      </Box>  
       <PerfectScrollbar>
         <Box minWidth={1200}>
           <Table>
@@ -527,9 +303,7 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
               <TableRow>
                 <TableCell padding="checkbox">
                   <Checkbox
-                    checked={selectedAllProducts}
-                    indeterminate={selectedSomeProducts}
-                    onChange={handleSelectAllProducts}
+                    checked={false}
                   />
                 </TableCell>
                 <TableCell />
@@ -554,7 +328,7 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedProducts.map((product) => {
+              {/* {paginatedProducts.map((product) => {
                 const isProductSelected = selectedProducts.includes(product.id);
 
                 return (
@@ -628,10 +402,10 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
                     </TableCell>
                   </TableRow>
                 );
-              })}
+              })} */}
             </TableBody>
           </Table>
-          <TablePagination
+          {/* <TablePagination
             component="div"
             count={filteredProducts.length}
             onChangePage={handlePageChange}
@@ -639,7 +413,7 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
             page={page}
             rowsPerPage={limit}
             rowsPerPageOptions={[5, 10, 25]}
-          />
+          /> */}
         </Box>
       </PerfectScrollbar>
       <Dialog
@@ -651,6 +425,8 @@ const Tables: FC<TablesProps> = ({ className, products, ...rest }) => {
         {/* Dialog renders its body even if not open */}
         {isModalOpen && (
           <NewItem
+            segments={segments}
+            products={products}
             families={families}
             subFamilies={subFamilies}
             units={units}

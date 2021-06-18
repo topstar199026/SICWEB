@@ -11,7 +11,7 @@ namespace SICWEB.Models
         public Byte unit { get; set; }
         public bool itm_c_bactivo { get; set; }
         public Decimal saleprice { get; set; }
-        public int pro_partida_c_iid { get; set; }
+        public int pid { get; set; }
 
         public int family { get; set; }
 

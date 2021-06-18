@@ -1,6 +1,5 @@
 import {
-  FC, ReactNode, useEffect, useRef, useState} from 'react';
-import PropTypes from 'prop-types';
+  FC} from 'react';
 import {
   Dialog, makeStyles
 } from '@material-ui/core';
@@ -8,9 +7,7 @@ import {
 import clsx from 'clsx';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { green } from '@material-ui/core/colors';
-import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
-import CheckIcon from '@material-ui/icons/Check';
 import SaveIcon from '@material-ui/icons/Save';
 
 interface LoadingModalProps {
@@ -55,30 +52,31 @@ const useStyles = makeStyles((theme) => ({
 const LoadingModal: FC<LoadingModalProps> = ({ isModalOpen, handleModalClose, }) => {
   const classes = useStyles();
 
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const timer = useRef(null);
+  // const [loading, setLoading] = useState(false);
+  // const [success, setSuccess] = useState(false);
+  // const timer = useRef(null);
 
   const buttonClassname = clsx({
-    [classes.buttonSuccess]: success,
+    // [classes.buttonSuccess]: success,
+    [classes.buttonSuccess]: false,
   });
 
-  useEffect(() => {
-    return () => {
-      clearTimeout(timer.current);
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     clearTimeout(timer.current);
+  //   };
+  // }, []);
   
-  const handleButtonClick = () => {
-    if (!loading) {
-      setSuccess(false);
-      setLoading(true);
-      timer.current = window.setTimeout(() => {
-        setSuccess(true);
-        setLoading(false);
-      }, 2000);
-    }
-  };
+  // const handleButtonClick = () => {
+  //   if (!loading) {
+  //     setSuccess(false);
+  //     setLoading(true);
+  //     timer.current = window.setTimeout(() => {
+  //       setSuccess(true);
+  //       setLoading(false);
+  //     }, 2000);
+  //   }
+  // };
 
 
   return (
@@ -104,11 +102,13 @@ const LoadingModal: FC<LoadingModalProps> = ({ isModalOpen, handleModalClose, })
                   aria-label="save"
                   color="primary"
                   className={buttonClassname}
-                  onClick={handleButtonClick}
+                  // onClick={handleButtonClick}
                 >
-                  {success ? <CheckIcon /> : <SaveIcon />}
+                  {/* {success ? <CheckIcon /> : <SaveIcon />} */}
+                  <SaveIcon />
                 </Fab>
-                {loading && <CircularProgress size={68} className={classes.fabProgress} />}
+                {/* {(loading || true) && <CircularProgress size={68} className={classes.fabProgress} />} */}
+                {<CircularProgress size={68} className={classes.fabProgress} />}
               </div>
             </div>
           )

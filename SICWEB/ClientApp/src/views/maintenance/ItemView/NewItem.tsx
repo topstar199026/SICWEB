@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { FC } from 'react';
 import PropTypes from 'prop-types';
 
@@ -12,24 +12,23 @@ import {
   Button,
   IconButton,
   Divider,
-  FormControlLabel,
   FormHelperText,
-  Switch,
-  SvgIcon,
   makeStyles,
   Grid,
   Dialog
 } from '@material-ui/core';
 import AddIcon2 from '@material-ui/icons/Add';
-import { Trash as TrashIcon } from 'react-feather';
 import type { Theme } from 'src/theme';
 import type { Event } from 'src/types/calendar';
-import { useDispatch } from 'src/store';
 import NewCategory from './NewCategory';
-import { getSubFamilies, saveItem } from 'src/apis/itemApi';
+import { getFamilyAndSub, getSubFamilies, saveItem } from 'src/apis/itemApi';
+import { useSnackbar } from 'notistack';
+import useSettings from 'src/hooks/useSettings';
 
 
 interface NewItemProps {
+    segments?: any[],
+    products?: any[],
     families?: any[],
     subFamilies?: any[],
     units?: any[],
@@ -48,6 +47,7 @@ const getInitialValues = (event?: Event) => {
         unit: -1,
         purchaseprice: '',
         saleprice: '',
+        pid: -1,
         family: -1,
         subfamily: -1,
         submit: null
@@ -62,6 +62,8 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 const NewItem: FC<NewItemProps> = ({
+    segments,
+    products,
     families,
     units,
     event,
@@ -72,26 +74,34 @@ const NewItem: FC<NewItemProps> = ({
     onEditComplete
 }) => {
     const classes = useStyles();
-    const dispatch = useDispatch();
-
-    const isCreating = !event;
+    const { enqueueSnackbar } = useSnackbar();
+    const { saveSettings } = useSettings();
     const [isModalOpen3, setIsModalOpen3] = useState(false);
     const [subFamilies, setSubFamilies] = useState<any>([]);
 
+    const [family2, setFamily2] = useState<any[]>([]);
+    const [subFamily2, setSubFamily2] = useState<any[]>([]);
+    
     const _getSubFamilies = (family) => {
         getSubFamilies(family).then(res => {
             setSubFamilies(res);
         })
     }
 
-    const handleDelete = async (): Promise<void> => {
-        try {
-        onDeleteComplete();
-        } catch (err) {
-        console.error(err);
-        }
-    };
-
+    const _getFamilyAndSub = (pid) => {
+        getFamilyAndSub(pid).then(res => {
+            console.log(res)
+            setFamily2([
+                res['family']
+            ]);
+            setSubFamily2([
+                res['subFamily']
+            ]);
+        }).catch(err => {
+            setFamily2([]);
+            setSubFamily2([]);
+        })
+    }
     const handleModalClose3 = (): void => {
         setIsModalOpen3(false);
     };
@@ -107,11 +117,10 @@ const NewItem: FC<NewItemProps> = ({
                 validationSchema={Yup.object().shape({
                     code: Yup.string().max(5000).required('Se requiere el código'),
                     description: Yup.string().max(5000).required('Se requiere una descripción'),
-                    unit: Yup.string().min(0).max(5000).required('Se requiere unidad de medida'),
+                    unit: Yup.number().min(0).max(5000).required(),
                     purchaseprice: Yup.number().required('Se requiere el precio de compra'),
                     saleprice: Yup.number().required('Se requiere el Precio de Venta'),
-                    family: Yup.number().min(1).required('Se requiere el familia'),
-                    subfamily: Yup.number().min(1).required('Se requiere el subFamilia')
+                    pid: Yup.number().min(0).required()
                 })}
                 onSubmit={async (values, {
                     resetForm,
@@ -119,34 +128,27 @@ const NewItem: FC<NewItemProps> = ({
                     setStatus,
                     setSubmitting
                 }) => {
-                    try {
-                    const data = {
-                        code: values.code,
-                        unit: values.unit,
-                        description: values.description,
-                        purchaseprice: values.purchaseprice,
-                        saleprice: values.saleprice,
-                        family: values.family,
-                        subfamily: values.subfamily,
-                    };
-
-                    await saveItem(data);
-                    
-                    resetForm();
-                    setStatus({ success: true });
-                    setSubmitting(false);
-
-                    if (isCreating) {
-                        onAddComplete();
-                    } else {
-                        onEditComplete();
-                    }
-                    } catch (err) {
-                    console.error(err);
-                    setStatus({ success: false });
-                    setErrors({ submit: err.message });
-                    setSubmitting(false);
-                    }
+                    saveSettings({saving: true});
+                    window.setTimeout(() => {
+                        saveItem(values).then(res => {
+                            saveSettings({saving: false});
+                            _getInitialData();
+                            enqueueSnackbar('Tus datos se han guardado exitosamente.', {
+                            variant: 'success'
+                            });
+                            resetForm();
+                            setStatus({ success: true });
+                            setSubmitting(false);
+                            onCancel();
+                        }).catch(err => {
+                            console.log('err',err)
+                            _getInitialData();
+                            enqueueSnackbar('No se pudo guardar.', {
+                            variant: 'error'
+                            });
+                            saveSettings({saving: false});
+                        });
+                    }, 1000);
                 }}
             >
                 {({
@@ -171,6 +173,7 @@ const NewItem: FC<NewItemProps> = ({
                             {'Agregar ítem nuevo'}
                             </Typography>
                         </Box>
+                        <Divider />
                         <Box p={3}>            
                             <Grid container spacing={3}>
                                 <Grid item lg={12} sm={12} xs={12}>
@@ -188,10 +191,7 @@ const NewItem: FC<NewItemProps> = ({
                                     />
                                 </Grid>
                             </Grid>
-                            <Grid
-                                container
-                                spacing={3}
-                            >
+                            <Grid container spacing={3}>
                                 <Grid item lg={6} sm={6} xs={12}>  
                                     <TextField
                                         size="small"
@@ -210,7 +210,7 @@ const NewItem: FC<NewItemProps> = ({
                                     <TextField
                                         size="small"
                                         error={Boolean(touched.unit && errors.unit)}
-                                        helperText={touched.unit && errors.unit}
+                                        helperText={touched.unit && errors.unit && 'Se requiere unidad de medida'}
                                         label="Unidad de Medida"
                                         name="unit"
                                         fullWidth
@@ -221,7 +221,7 @@ const NewItem: FC<NewItemProps> = ({
                                         onChange={handleChange}
                                         value={values.unit}
                                         >
-                                        <option disabled selected key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                        <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
                                         {units.map((unit) => (
                                             <option
                                             key={unit.und_c_yid}
@@ -247,7 +247,7 @@ const NewItem: FC<NewItemProps> = ({
                                         size="small"
                                         error={Boolean(touched.purchaseprice && errors.purchaseprice)}
                                         fullWidth
-                                        helperText={touched.purchaseprice && errors.purchaseprice}
+                                        helperText={touched.purchaseprice && errors.purchaseprice && 'El precio de compra debe ser un número'}
                                         label="Precio de Compra"
                                         name="purchaseprice"
                                         onBlur={handleBlur}
@@ -261,7 +261,7 @@ const NewItem: FC<NewItemProps> = ({
                                         size="small"
                                         error={Boolean(touched.saleprice && errors.saleprice)}
                                         fullWidth
-                                        helperText={touched.saleprice && errors.saleprice}
+                                        helperText={touched.saleprice && errors.saleprice && 'El precio de venta debe ser un número'}
                                         label="Precio de Venta"
                                         name="saleprice"
                                         onBlur={handleBlur}
@@ -275,10 +275,52 @@ const NewItem: FC<NewItemProps> = ({
                                 <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
                                     <TextField
                                         size="small"
+                                        label="Producto"
+                                        name="pid"
+                                        error={Boolean(touched.pid && errors.pid)}
+                                        helperText={touched.pid && errors.pid && 'Se requiere el producto'}
+                                        fullWidth
+                                        SelectProps={{ native: true }}
+                                        select
+                                        onBlur={handleBlur}
+                                        onChange={(e) => {
+                                            _getFamilyAndSub(e.target.value);
+                                            handleChange(e);
+                                        }}
+                                        value={values.pid}
+                                        variant="outlined"
+                                    >
+                                        <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                        {products.map((product) => (
+                                            <option
+                                            key={product.pro_partida_c_iid}
+                                            value={product.pro_partida_c_iid}
+                                            >
+                                            {product.pro_partida_c_vdescripcion}
+                                            </option>
+                                        ))}
+                                    </TextField>
+                                    {/* <IconButton 
+                                        size="small" 
+                                        color="secondary" 
+                                        aria-label="add to shopping cart"
+                                        onClick={() => handleModalOpen3()}
+                                    >
+                                        <AddIcon2 />
+                                    </IconButton> */}
+                                </Grid>
+                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
+                                    <></>
+                                </Grid>
+                            </Grid>
+                            <Grid container spacing={3}>
+                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
+                                    <TextField
+                                        size="small"
                                         label="Familia"
                                         name="family"
                                         error={Boolean(touched.family && errors.family)}
-                                        helperText={touched.family && errors.family}
+                                        helperText={touched.family && errors.family && 'Se requiere el familia'}
                                         fullWidth
                                         SelectProps={{ native: true }}
                                         select
@@ -291,9 +333,14 @@ const NewItem: FC<NewItemProps> = ({
                                         value={values.family}
                                         variant="outlined"
                                     >
-                                        <option disabled selected key="-1" value="-1">{'-- Seleccionar --'}</option>
-                                        {families.map((family) => (
+                                        {
+                                            family2.length === 0
+                                            &&
+                                            <option key="-1" value="-1"> -- -- -- </option>
+                                        }                                        
+                                        {family2.map((family) => (
                                             <option
+                                            selected
                                             key={family.ifm_c_iid}
                                             value={family.ifm_c_iid}
                                             >
@@ -316,7 +363,7 @@ const NewItem: FC<NewItemProps> = ({
                                         label="SubFamilia"
                                         name="subfamily"
                                         error={Boolean(touched.subfamily && errors.subfamily)}
-                                        helperText={touched.subfamily && errors.subfamily}
+                                        helperText={touched.subfamily && errors.subfamily && 'Se requiere el subFamilia'}
                                         fullWidth
                                         SelectProps={{ native: true }}
                                         select
@@ -325,9 +372,14 @@ const NewItem: FC<NewItemProps> = ({
                                         onChange={handleChange}
                                         value={values.subfamily}
                                         >
-                                        <option disabled  selected key="-1" value="-1">{'-- Seleccionar --'}</option>
-                                        {subFamilies.map((subFamily) => (
+                                        {
+                                            family2.length === 0
+                                            &&
+                                            <option key="-1" value="-1"> -- -- -- </option>
+                                        }
+                                        {subFamily2.map((subFamily) => (
                                             <option
+                                            selected
                                             key={subFamily.isf_c_iid}
                                             value={subFamily.isf_c_iid}
                                             >
@@ -366,16 +418,9 @@ const NewItem: FC<NewItemProps> = ({
                             display="flex"
                             alignItems="center"
                         >
-                            {!isCreating && (
-                            <IconButton onClick={() => handleDelete()}>
-                                <SvgIcon>
-                                <TrashIcon />
-                                </SvgIcon>
-                            </IconButton>
-                            )}
                             <Box flexGrow={1} />
                             <Button onClick={onCancel}>
-                            Cancel
+                                {'Cancelar'}
                             </Button>
                             <Button
                             variant="contained"
@@ -384,7 +429,7 @@ const NewItem: FC<NewItemProps> = ({
                             color="secondary"
                             className={classes.confirmButton}
                             >
-                            Confirm
+                                {'Confirmar'}
                             </Button>
                         </Box>
                     </form>
@@ -397,16 +442,14 @@ const NewItem: FC<NewItemProps> = ({
                 open={isModalOpen3}
             >
                 {isModalOpen3 && (
-                <NewCategory
-                    families={families}
-                    subFamilies={subFamilies}
-                    units={units}
-                    _getInitialData={_getInitialData}
-                    onAddComplete={handleModalClose3}
-                    onCancel={handleModalClose3}
-                    onDeleteComplete={handleModalClose3}
-                    onEditComplete={handleModalClose3}
-                />
+                    <NewCategory
+                        segments={segments}
+                        families={families}
+                        subFamilies={subFamilies}
+                        units={units}
+                        _getInitialData={_getInitialData}
+                        onCancel={handleModalClose3}
+                    />
                 )}
             </Dialog>
         </>
@@ -422,13 +465,6 @@ NewItem.propTypes = {
   onEditComplete: PropTypes.func,
   // @ts-ignore
   range: PropTypes.object
-};
-
-NewItem.defaultProps = {
-  onAddComplete: () => { },
-  onCancel: () => { },
-  onDeleteComplete: () => { },
-  onEditComplete: () => { }
 };
 
 export default NewItem;
