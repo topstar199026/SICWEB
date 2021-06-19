@@ -17,8 +17,15 @@ import {
   TextField,
   makeStyles,
   Dialog,
-  Grid
+  Grid,
+  IconButton,
+  SvgIcon
 } from '@material-ui/core';
+import {
+  Edit as EditIcon,
+  Trash as DeleteIcon,
+  Search as SearchIcon
+} from 'react-feather';
 
 import SearchIcon2 from '@material-ui/icons/Search';
 import AddIcon2 from '@material-ui/icons/Add';
@@ -26,8 +33,10 @@ import AddIcon2 from '@material-ui/icons/Add';
 import type { Theme } from 'src/theme';
 import type { Product } from 'src/types/product';
 import NewItem from './NewItem';
-import {getSegments, getFamilies, getUnits, getProducts, getSubFamilies, getItem} from 'src/apis/itemApi';
+import {getSegments, getFamilies, getUnits, getProducts, getSubFamilies, getItem, deleteItem} from 'src/apis/itemApi';
 import useSettings from 'src/hooks/useSettings';
+import ConfirmModal from 'src/components/ConfirmModal';
+import { useSnackbar } from 'notistack';
 
 
 interface TablesProps {
@@ -120,8 +129,9 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 const Tables: FC<TablesProps> = ({ className, ...rest }) => {
   const classes = useStyles();
-  
-  const { settings } = useSettings();
+  const { enqueueSnackbar } = useSnackbar();
+  const { settings, saveSettings } = useSettings();
+
   const [values, setValues] = useState({
     direction: settings.direction,
     responsiveFontSizes: settings.responsiveFontSizes,
@@ -134,15 +144,22 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
   const [subFamilies, setSubFamilies] = useState<any>([]);
   const [units, setUnits] = useState<any>([]);
 
+  const [items, setItems] = useState<any>([]);
+
   const [filters, setFilters] = useState({
     code: '',
     description: '',
-    family: null,
-    subFamily: null,
+    family: '-1',
+    subFamily: '-1',
   });
 
-   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [deleteID, setDeleteID] = useState('-1');
+  const [editID, setEditID] = useState(-1);
+  
   const [isModalOpen2, setIsModalOpen2] = useState(false);
+  
 
   useEffect(() => {
     _getInitialData();
@@ -153,6 +170,7 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
     _getProducts();
     _getFamilies(); 
     _getUnits();
+    handleSearch();
   }
 
   const _getSegments = () => {
@@ -195,8 +213,29 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
     console.log(filters)
     getItem(filters).then(res => {
       console.log(res)
+      setItems(res);
+    }).catch(err => {
+      setItems([]);
     })
   }
+
+  const handleDelete =(id) => {
+    setDeleteID(id);
+    setIsModalOpen2(true);
+  }
+
+  const handleEdit =(id) => {
+    setEditID(id);
+    setIsModalOpen(true);
+    
+  }
+
+  // useEffect(() => {
+  //   console.log('editID', editID);
+  //   setIsModalOpen(true);
+  // }, [editID])
+
+  
 
   return (
     <Card
@@ -241,7 +280,7 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
                   onChange={(e) => {
                     setFilters({...filters, 
                       family: e.target.value,
-                      subFamily: -1
+                      subFamily: '-1'
                     })
                     _getSubFamilies(e.target.value);
                   }}
@@ -290,7 +329,7 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
                 <Button onClick={handleSearch} variant="contained" color="primary" startIcon={<SearchIcon2 />}>{'Buscar'}</Button>
               </Grid>
               <Grid item>
-                <Button variant="contained" color="secondary" startIcon={<AddIcon2 />} onClick={() => setIsModalOpen(true)}>{'Nuevo'}</Button>
+                <Button variant="contained" color="secondary" startIcon={<AddIcon2 />} onClick={() => handleEdit('-1')}>{'Nuevo'}</Button>
               </Grid>
             </Grid>
           </Grid>      
@@ -298,111 +337,81 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
       </Box>  
       <PerfectScrollbar>
         <Box minWidth={1200}>
-          <Table>
-            <TableHead>
+          <Table
+            stickyHeader >
+            <TableHead style={{background: 'red'}}>
               <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={false}
-                  />
-                </TableCell>
-                <TableCell />
                 <TableCell>
-                  Name
+                CÓDIGO
                 </TableCell>
                 <TableCell>
-                  Inventory
+                DESCRIPCIÓN
                 </TableCell>
                 <TableCell>
-                  Details
+                PRECIO COMPRA
                 </TableCell>
                 <TableCell>
-                  Attributes
+                PRECIO VENTA
                 </TableCell>
                 <TableCell>
-                  Price
+                UNIDAD DE MEDIDA	
+                </TableCell>
+                <TableCell>
+                FAMILIA	
+                </TableCell>
+                <TableCell>
+                SUBFAMILIA	
                 </TableCell>
                 <TableCell align="right">
-                  Actions
+                  &nbsp;
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {/* {paginatedProducts.map((product) => {
-                const isProductSelected = selectedProducts.includes(product.id);
-
+              {items.map((item, index) => {
+                console.log(item.itm_c_ccodigo)
                 return (
                   <TableRow
+                   style={{height: 30 }}
                     hover
-                    key={product.id}
-                    selected={isProductSelected}
+                    key={item.itm_c_iid}
                   >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={isProductSelected}
-                        onChange={(event) => handleSelectOneProduct(event, product.id)}
-                        value={isProductSelected}
-                      />
-                    </TableCell>
-                    <TableCell className={classes.imageCell}>
-                      {product.image ? (
-                        <img
-                          alt="Product"
-                          src={product.image}
-                          className={classes.image}
-                        />
-                      ) : (
-                        <Box
-                          p={2}
-                          bgcolor="background.dark"
-                        >
-                          <SvgIcon>
-                            <ImageIcon />
-                          </SvgIcon>
-                        </Box>
-                      )}
+                    <TableCell>
+                     {item.itm_c_ccodigo}
                     </TableCell>
                     <TableCell>
-                      <Link
-                        variant="subtitle2"
-                        color="textPrimary"
-                        component={RouterLink}
-                        underline="none"
-                        to="#"
-                      >
-                        {product.name}
-                      </Link>
+                     {item.itm_c_vdescripcion}
                     </TableCell>
                     <TableCell>
-                      {getInventoryLabel(product.inventoryType)}
+                     {item.itm_c_dprecio_compra}
                     </TableCell>
                     <TableCell>
-                      {product.quantity}
-                      {' '}
-                      in stock
-                      {product.variants > 1 && ` in ${product.variants} variants`}
+                     {item.itm_c_dprecio_venta}
                     </TableCell>
                     <TableCell>
-                      {product.attributes.map((attr) => attr)}
+                     {item.und_c_yid}
                     </TableCell>
                     <TableCell>
-                      {numeral(product.price).format(`${product.currency}0,0.00`)}
+                     {item.ifm_c_des}
+                    </TableCell>
+                    <TableCell>
+                     {item.isf_c_vdesc}
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton>
+                      <IconButton onClick={() =>handleEdit(index)}>
                         <SvgIcon fontSize="small">
                           <EditIcon />
                         </SvgIcon>
                       </IconButton>
-                      <IconButton>
+                      <IconButton onClick={() =>handleDelete(item.itm_c_iid)}>
                         <SvgIcon fontSize="small">
-                          <ArrowRightIcon />
+                          <DeleteIcon />
                         </SvgIcon>
                       </IconButton>
                     </TableCell>
                   </TableRow>
                 );
-              })} */}
+              })}
             </TableBody>
           </Table>
           {/* <TablePagination
@@ -431,6 +440,8 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
             subFamilies={subFamilies}
             units={units}
             _getInitialData={_getInitialData}
+            editID = {editID}
+            _initialValue = {items}
             onAddComplete={handleModalClose}
             onCancel={handleModalClose}
             onDeleteComplete={handleModalClose}
@@ -438,6 +449,35 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
           />
         )}
       </Dialog>
+      <ConfirmModal 
+        open={isModalOpen2}
+        title={'Delete this item?'}
+        setOpen={() => setIsModalOpen2(false)}
+        onConfirm={() => {  
+          saveSettings({saving: true});  
+          window.setTimeout(() => {
+            deleteItem(deleteID).then(res => {
+                  saveSettings({saving: false});
+                  _getInitialData();
+                  enqueueSnackbar('Tus datos se han guardado exitosamente.', {
+                  variant: 'success'
+                  });
+                  
+                  setIsModalOpen2(false);
+                  handleSearch();
+              }).catch(err => {
+                  console.log('err',err);
+                  
+                setIsModalOpen2(false);
+                handleSearch();
+                  enqueueSnackbar('No se pudo guardar.', {
+                  variant: 'error'
+                  });
+                  saveSettings({saving: false});
+              });
+          }, 1000);   
+        }}
+      />
     </Card>
   );
 };

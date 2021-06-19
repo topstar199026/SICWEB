@@ -67,6 +67,12 @@ export const saveItem = async (saveItem) => {
     else return [];
 }
 
+export const deleteItem = async (id) => {
+    const response = await axios.post<{}>('/api/item/deleteItem', {id: id});
+    if(response.status === 200) return response.data;
+    else return [];
+}
+
 export const getItem = async (filter) => {
     const response = await axios.post<{}>('/api/item/items', filter);
     if(response.status === 200) return response.data;

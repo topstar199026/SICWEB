@@ -148,6 +148,7 @@ namespace SICWEB.Controllers
                 var family = _context_MS.ITEM_FAMILIA.Where(u => u.ifm_c_iid.Equals(subFamily.isf_c_ifm_iid)).FirstOrDefault();
                 if (family == null) return Conflict();
                 FamilySub familySub = new();
+
                 familySub.Family = family;
                 familySub.SubFamily = subFamily;
                 return Ok(familySub);
@@ -165,8 +166,54 @@ namespace SICWEB.Controllers
         {
             if (_engine.Equals("MSSQL"))
             {
-                
-                return Ok(_context_MS.ITEM.ToArray());
+
+                var query = from A in _context_MS.Set<T_ITEM>()
+                            join E in _context_MS.Set<T_UNIDAD_MEDIDA>()
+                                on A.und_c_yid equals E.und_c_yid
+                            join B in _context_MS.Set<T_PRODUCTO_PARTIDA>()
+                                on A.pro_partida_c_iid equals B.pro_partida_c_iid
+                            join C in _context_MS.Set<T_ITEM_SUB_FAMILIA>()
+                                on B.isf_c_iid equals C.isf_c_iid
+                            join D in _context_MS.Set<T_ITEM_FAMILIA>()
+                                on C.isf_c_ifm_iid equals D.ifm_c_iid
+                            select new
+                            {
+                                A.itm_c_iid,
+                                A.itm_c_vdescripcion
+                                ,
+                                A.itm_c_dprecio_compra
+                                ,
+                                A.itm_c_dprecio_venta
+                                ,
+                                A.itm_c_ccodigo
+                                ,
+                                A.pro_partida_c_iid
+                                ,
+                                C.isf_c_vdesc,
+                                C.isf_c_iid,
+                                D.ifm_c_des,
+                                D.ifm_c_iid,
+                                E.und_c_yid
+                            };
+
+                if (!(searchKey.code == null) && !searchKey.code.Equals("")) {
+                    query = query.Where(c => c.itm_c_ccodigo.Contains(searchKey.code));
+                    
+                }
+                if (!(searchKey.description == null) && !searchKey.description.Equals(""))
+                {
+                    query = query.Where(c => c.itm_c_vdescripcion.Contains(searchKey.description));
+                }
+                if (searchKey.subFamily > -1)
+                {
+                    query = query.Where(c => c.isf_c_iid.Equals(searchKey.subFamily));
+                }
+                if (searchKey.family > -1)
+                {
+                    query = query.Where(c => c.ifm_c_iid.Equals(searchKey.family));
+                }
+
+                return Ok(query);
             }
             else
             {
@@ -254,25 +301,67 @@ namespace SICWEB.Controllers
         {
             if (_engine.Equals("MSSQL"))
             {
-                //if (_context_MS.ITEM_SUB_FAMILIA.Where(u => u.isf_c_vdesc.Equals(newSubFamily.subfamily) && u.isf_c_ifm_iid.Equals(newSubFamily.family)).Any())
-                //    return Ok();
-                //return Task.FromResult(Ok(_context_MS.UNIDAD_MEDIDA.ToArray()));
-                T_ITEM _item = new();
-                _item.itm_c_ccodigo = item.code;
-                _item.itm_c_vdescripcion = item.description;
+                if (item.id<0)
+                {
+                    T_ITEM _item = new();
+                    _item.itm_c_ccodigo = item.code;
+                    _item.itm_c_vdescripcion = item.description;
 
-                _item.itm_c_dprecio_compra = item.purchaseprice;
-                _item.itm_c_dprecio_venta = item.saleprice;
-                _item.und_c_yid = item.unit;
-                _item.pro_partida_c_iid = item.pid;
-                _item.itm_c_bactivo = true;
-                _context_MS.ITEM.Add(_item);
-                _context_MS.SaveChanges();
-                return Ok();
+                    _item.itm_c_dprecio_compra = item.purchaseprice;
+                    _item.itm_c_dprecio_venta = item.saleprice;
+                    _item.und_c_yid = item.unit;
+                    _item.pro_partida_c_iid = item.pid;
+                    _item.itm_c_bactivo = true;
+                    _context_MS.ITEM.Add(_item);
+                    _context_MS.SaveChanges();
+                    return Ok();
+                }
+                else
+                {
+                    var _item = _context_MS.ITEM.Where(e => e.itm_c_iid.Equals(item.id)).FirstOrDefault();
+                    _item.itm_c_ccodigo = item.code;
+                    _item.itm_c_vdescripcion = item.description;
+
+                    _item.itm_c_dprecio_compra = item.purchaseprice;
+                    _item.itm_c_dprecio_venta = item.saleprice;
+                    _item.und_c_yid = item.unit;
+                    _item.pro_partida_c_iid = item.pid;
+                    _item.itm_c_bactivo = true;
+                    _context_MS.ITEM.Update(_item);
+                    _context_MS.SaveChanges();
+                    return Ok();
+                }
             }
             else
             {
                 return Ok();
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Deleteitem([FromBody] IdKey item)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+                //if (_context_MS.ITEM_SUB_FAMILIA.Where(u => u.isf_c_vdesc.Equals(newSubFamily.subfamily) && u.isf_c_ifm_iid.Equals(newSubFamily.family)).Any())
+                //    return Ok();
+                //return Task.FromResult(Ok(_context_MS.UNIDAD_MEDIDA.ToArray()));
+                var _item = _context_MS.ITEM.Where(u => u.itm_c_iid.Equals(item.id)).FirstOrDefault();
+                if (!(_item == null))
+                {
+                    _context_MS.ITEM.Remove(_item);
+                    _context_MS.SaveChanges();
+                    return Ok();
+                }
+                else {
+                    return NotFound();
+                }
+            }
+            else
+            {
+                return NotFound();
             }
         }
 

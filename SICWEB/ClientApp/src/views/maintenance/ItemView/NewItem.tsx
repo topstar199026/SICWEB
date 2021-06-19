@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FC } from 'react';
 import PropTypes from 'prop-types';
 
@@ -27,6 +27,8 @@ import useSettings from 'src/hooks/useSettings';
 
 
 interface NewItemProps {
+    editID: number,
+    _initialValue?: any,
     segments?: any[],
     products?: any[],
     families?: any[],
@@ -40,20 +42,6 @@ interface NewItemProps {
     onEditComplete?: () => void;
 }
 
-const getInitialValues = (event?: Event) => {
-    return _.merge({}, {
-        code: '',
-        description: '',
-        unit: -1,
-        purchaseprice: '',
-        saleprice: '',
-        pid: -1,
-        family: -1,
-        subfamily: -1,
-        submit: null
-      }, event);
-};
-
 const useStyles = makeStyles((theme: Theme) => ({
   root: {},
   confirmButton: {
@@ -62,6 +50,8 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 const NewItem: FC<NewItemProps> = ({
+    editID,
+    _initialValue,
     segments,
     products,
     families,
@@ -88,6 +78,7 @@ const NewItem: FC<NewItemProps> = ({
         })
     }
 
+    console.log('_initialValue',editID, _initialValue);
     const _getFamilyAndSub = (pid) => {
         getFamilyAndSub(pid).then(res => {
             console.log(res)
@@ -109,11 +100,58 @@ const NewItem: FC<NewItemProps> = ({
     const handleModalOpen3 = (): void => {
         setIsModalOpen3(true);
     };
+
+    const getInitialValues = () => {
+        console.log('_initialValue');
+        if(editID > -1) {
+            return _.merge({}, {
+                id: -1,
+                code: '',
+                description: '',
+                unit: -1,
+                purchaseprice: '',
+                saleprice: '',
+                pid: -1,
+                family: -1,
+                subfamily: -1,
+                submit: null
+              }, {
+                    id: _initialValue[editID].itm_c_iid,
+                    code: _initialValue[editID].itm_c_ccodigo,
+                    description: _initialValue[editID].itm_c_vdescripcion,
+                    unit: _initialValue[editID].und_c_yid,
+                    purchaseprice: _initialValue[editID].itm_c_dprecio_compra,
+                    saleprice: _initialValue[editID].itm_c_dprecio_venta,
+                    pid: _initialValue[editID].pro_partida_c_iid,
+                    family: _initialValue[editID].isf_c_iid,
+                    subfamily: _initialValue[editID].ifm_c_iid,
+                    submit: null
+            });
+        }else{
+            return {
+                id: -1,
+                code: '',
+                description: '',
+                unit: -1,
+                purchaseprice: '',
+                saleprice: '',
+                pid: -1,
+                family: -1,
+                subfamily: -1,
+                submit: null
+              };
+        }
     
+        
+    };
+
+    useEffect(() => {
+        editID > -1 && _getFamilyAndSub(_initialValue[editID].pro_partida_c_iid);
+    }, [])
     return (
         <>
             <Formik
-                initialValues={getInitialValues(event)}
+                initialValues={getInitialValues()}
                 validationSchema={Yup.object().shape({
                     code: Yup.string().max(5000).required('Se requiere el código'),
                     description: Yup.string().max(5000).required('Se requiere una descripción'),
@@ -170,7 +208,7 @@ const NewItem: FC<NewItemProps> = ({
                             variant="h4"
                             color="textPrimary"
                             >
-                            {'Agregar ítem nuevo'}
+                            { editID>-1 ? 'Editar ítem' : 'Agregar ítem nuevo'}
                             </Typography>
                         </Box>
                         <Divider />
@@ -397,13 +435,6 @@ const NewItem: FC<NewItemProps> = ({
                                     </IconButton>
                                 </Grid>
                             </Grid>
-                            {Boolean(touched.end && errors.end) && (
-                            <Box mt={2}>
-                                <FormHelperText error>
-                                {errors.end}
-                                </FormHelperText>
-                            </Box>
-                            )}
                         </Box>
                         <Divider />
                         {errors.submit && (
