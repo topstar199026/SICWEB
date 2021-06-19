@@ -63,7 +63,7 @@ const LoginView: FC = () => {
   return (
     <Page
       className={classes.root}
-      title="Login"
+      title="Registrarse"
     >
       <div className={classes.banner}>
         <Container maxWidth="md">
@@ -86,7 +86,7 @@ const LoginView: FC = () => {
                 color="textPrimary"
                 variant="h6"
               >
-                ABCD
+                SIC
               </Typography>
             </Box>
           </Box>
@@ -110,13 +110,14 @@ const LoginView: FC = () => {
                   gutterBottom
                   variant="h3"
                 >
-                  Sign in
+                  iniciar sesión
+                  
                 </Typography>
                 <Typography
                   variant="body2"
                   color="textSecondary"
                 >
-                  Sign in on the internal platform
+                 Iniciar sesión en la plataforma interna
                 </Typography>
               </div>
             </Box>
@@ -135,7 +136,7 @@ const LoginView: FC = () => {
               variant="body2"
               color="textSecondary"
             >
-              Create new account
+              Crear una nueva cuenta
             </Link>
           </CardContent>
         </Card>

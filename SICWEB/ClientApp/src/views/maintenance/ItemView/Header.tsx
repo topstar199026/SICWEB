@@ -20,13 +20,13 @@ const Header: FC = () => {
         to="/app"
         component={RouterLink}
       >
-        Dashboard
+        MANTENIMIENTO
       </Link>
       <Typography
         variant="body1"
         color="textPrimary"
       >
-        Reports
+        ITEM
       </Typography>
     </Breadcrumbs>
   );

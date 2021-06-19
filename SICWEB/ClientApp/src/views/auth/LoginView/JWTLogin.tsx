@@ -81,7 +81,7 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
             fullWidth
             autoFocus
             helperText={touched.email && errors.email}
-            label="Email Address"
+            label="Nombre de usuario"
             margin="normal"
             name="email"
             onBlur={handleBlur}
@@ -94,7 +94,7 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
             error={Boolean(touched.password && errors.password)}
             fullWidth
             helperText={touched.password && errors.password}
-            label="Password"
+            label="Contraseña"
             margin="normal"
             name="password"
             onBlur={handleBlur}
@@ -119,7 +119,7 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
               type="submit"
               variant="contained"
             >
-              Log In
+              iniciar sesión
             </Button>
           </Box>
           <Box mt={2}>
@@ -127,13 +127,13 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
               severity="info"
             >
               <div>
-                Use
+                Utilice 
                 {' '}
-                <b>demo@devias.io</b>
+                <b>ADMIN</b>
                 {' '}
-                and password
+                y contraseña 
                 {' '}
-                <b>Password123</b>
+                <b>juan899833245</b>
               </div>
             </Alert>
           </Box>
