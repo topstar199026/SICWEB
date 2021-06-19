@@ -451,7 +451,7 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
       </Dialog>
       <ConfirmModal 
         open={isModalOpen2}
-        title={'Delete this item?'}
+        title={'¿Eliminar este artículo?'}
         setOpen={() => setIsModalOpen2(false)}
         onConfirm={() => {  
           saveSettings({saving: true});  
