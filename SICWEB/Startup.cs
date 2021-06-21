@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using SICWEB.DbFactory;
+using SICWEB.Models2;
 using System.Text;
 
 namespace SICWEB
@@ -34,7 +35,12 @@ namespace SICWEB
                 options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
             services.AddDbContext<MaintenanceMssqlDbContext>(options =>
                 options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
+            services.AddDbContext<SICDBWEB_MYSContext>(options =>
+                options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
             
+            services.AddTransient<IDatabaseInitializer, DatabaseInitializer>();
+
+
             services.AddControllersWithViews();
 
             // In production, the React files will be served from this directory
