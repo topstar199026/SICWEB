@@ -19,7 +19,9 @@ import {
   Dialog,
   Grid,
   IconButton,
-  SvgIcon
+  SvgIcon,
+  Tooltip,
+  TablePagination
 } from '@material-ui/core';
 import {
   Edit as EditIcon,
@@ -70,6 +72,9 @@ const sortOptions = [
   }
 ];
 
+const applyPagination = (products: any[], page: number, limit: number): any[] => {
+  return products.slice(page * limit, page * limit + limit);
+};
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {},
@@ -160,6 +165,12 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
   
   const [isModalOpen2, setIsModalOpen2] = useState(false);
   
+  const [page, setPage] = useState<number>(0);
+  const [limit] = useState<number>(15);
+
+  const paginatedItems = applyPagination(items, page, limit);
+
+  
 
   useEffect(() => {
     _getInitialData();
@@ -229,6 +240,10 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
     setIsModalOpen(true);
     
   }
+
+  const handlePageChange = (event: any, newPage: number): void => {
+    setPage(newPage);
+  };
 
   // useEffect(() => {
   //   console.log('editID', editID);
@@ -368,7 +383,7 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {items.map((item, index) => {
+              {paginatedItems.map((item, index) => {
                 console.log(item.itm_c_ccodigo)
                 return (
                   <TableRow
@@ -398,35 +413,39 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
                      {item.isf_c_vdesc}
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton onClick={() =>handleEdit(index)}>
-                        <SvgIcon fontSize="small">
-                          <EditIcon />
-                        </SvgIcon>
-                      </IconButton>
-                      <IconButton onClick={() =>handleDelete(item.itm_c_iid)}>
-                        <SvgIcon fontSize="small">
-                          <DeleteIcon />
-                        </SvgIcon>
-                      </IconButton>
+                      <Tooltip title="Editar" aria-label="Editar">
+                        <IconButton onClick={() =>handleEdit(index)}>
+                          <SvgIcon fontSize="small">
+                            <EditIcon />
+                          </SvgIcon>
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Eliminar" aria-label="Eliminar">
+                        <IconButton onClick={() =>handleDelete(item.itm_c_iid)}>
+                          <SvgIcon fontSize="small">
+                            <DeleteIcon />
+                          </SvgIcon>
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
-          {/* <TablePagination
+          <TablePagination
             component="div"
-            count={filteredProducts.length}
+            count={items.length}
             onChangePage={handlePageChange}
-            onChangeRowsPerPage={handleLimitChange}
+            onChangeRowsPerPage={()=>{}}
             page={page}
             rowsPerPage={limit}
-            rowsPerPageOptions={[5, 10, 25]}
-          /> */}
+            rowsPerPageOptions={[15]}
+          />
         </Box>
       </PerfectScrollbar>
       <Dialog
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
         onClose={handleModalClose}
         open={isModalOpen}

@@ -11,8 +11,14 @@ import {
   makeStyles,
   Card
 } from '@material-ui/core';
+import {
+  Link
+} from '@material-ui/core';
+
+import { Link as RouterLink } from 'react-router-dom';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import type { Theme } from 'src/theme';
+import { RouterRounded } from '@material-ui/icons';
 
 interface MultiSelectProps {
   label: string;
@@ -60,11 +66,16 @@ const MultiSelect: FC<MultiSelectProps> = ({
     setOpenMenu(false);
   };
 
+  const replaceRoute = (str) => {
+    return "/" + str.replace(".aspx", "");
+  }
+
   return (
     <div
       onMouseLeave={handleLeave}
     >
       <Button
+        style={{minWidth: '150px !important'}}
         onClick={handleMenuOpen}
         onMouseOver={handleMenuOpen}
         ref={anchorRef}
@@ -75,7 +86,8 @@ const MultiSelect: FC<MultiSelectProps> = ({
       <Card 
         className={classes.card}
         style={{
-          display: openMenu ? 'block' : 'none'
+          display: openMenu ? 'block' : 'none',
+          zIndex: 999
         }}
         onMouseLeave={handleMenuClose}
       >
@@ -85,6 +97,11 @@ const MultiSelect: FC<MultiSelectProps> = ({
             key={option.menu_c_iid}
             onClick={handleMenuClose}
           >
+            <Link
+              color="inherit"
+              to={replaceRoute(option.menu_c_vpag_asp)}
+              component={RouterLink}
+            >
             <FormControlLabel
               className={classes.formControlLabel}
               control={(
@@ -92,6 +109,7 @@ const MultiSelect: FC<MultiSelectProps> = ({
               )}
               label={option.menu_c_vnomb}
             />
+            </Link>
           </MenuItem>
         ))}
       </Card>      

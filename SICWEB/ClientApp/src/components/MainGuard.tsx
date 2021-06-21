@@ -11,7 +11,7 @@ const MainGuard: FC<MainGuardProps> = ({ children }) => {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    return <Redirect to="/app/dashboard" />;
+    return <Redirect to="/principal/tablero" />;
   }else{
     return <Redirect to="login" />;
   }

@@ -26,6 +26,11 @@ const useStyles = makeStyles((theme) => ({
     minHeight: 40,
     borderTop: '1px solid'
   },
+  [theme.breakpoints.down(583)]: {
+    toolbar2: {
+      height: 100
+    }
+  },
   logo: {
     marginRight: theme.spacing(2)
   },

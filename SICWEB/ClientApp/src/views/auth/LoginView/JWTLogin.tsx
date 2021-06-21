@@ -14,6 +14,7 @@ import {
 import { Alert } from '@material-ui/lab';
 import useAuth from 'src/hooks/useAuth';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
+import { useSnackbar } from 'notistack';
 
 interface JWTLoginProps {
   className?: string;
@@ -27,6 +28,7 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
   const classes = useStyles();
   const { login } = useAuth() as any;
   const isMountedRef = useIsMountedRef();
+  const { enqueueSnackbar } = useSnackbar();
 
   return (
     <Formik
@@ -36,8 +38,8 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
         submit: null
       }}
       validationSchema={Yup.object().shape({
-        // email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-        password: Yup.string().max(255).required('Password is required')
+        email: Yup.string().max(255).required('Se requiere nombre de usuario'),
+        password: Yup.string().max(255).required('se requiere contraseña')
       })}
       onSubmit={async (values, {
         setErrors,
@@ -45,11 +47,14 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
         setSubmitting
       }) => {
         try {
-          await login(values.email, values.password);
-
+          const status = await login(values.email, values.password);
+          status === 1 && enqueueSnackbar('Usuario y/o Password incorrectos', {
+            variant: 'error'
+          });
           if (isMountedRef.current) {
             setStatus({ success: true });
             setSubmitting(false);
+          }else{
           }
         } catch (err) {
           console.error(err);

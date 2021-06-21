@@ -71,6 +71,7 @@ const NewItem: FC<NewItemProps> = ({
 
     const [family2, setFamily2] = useState<any[]>([]);
     const [subFamily2, setSubFamily2] = useState<any[]>([]);
+    const [modalState, setModalState] = useState(0);
     
     const _getSubFamilies = (family) => {
         getSubFamilies(family).then(res => {
@@ -153,9 +154,9 @@ const NewItem: FC<NewItemProps> = ({
             <Formik
                 initialValues={getInitialValues()}
                 validationSchema={Yup.object().shape({
-                    code: Yup.string().max(5000).required('Se requiere el código'),
-                    description: Yup.string().max(5000).required('Se requiere una descripción'),
-                    unit: Yup.number().min(0).max(5000).required(),
+                    code: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('Se requiere el código'),
+                    description: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('Se requiere una descripción'),
+                    unit: Yup.number().min(0).required(),
                     purchaseprice: Yup.number().required('Se requiere el precio de compra'),
                     saleprice: Yup.number().required('Se requiere el Precio de Venta'),
                     pid: Yup.number().min(0).required()
@@ -208,13 +209,13 @@ const NewItem: FC<NewItemProps> = ({
                             variant="h4"
                             color="textPrimary"
                             >
-                            { editID>-1 ? 'Editar ítem' : 'Agregar ítem nuevo'}
+                            { editID>-1 ? 'Editar ítem' : 'Nuevo Item'}
                             </Typography>
                         </Box>
                         <Divider />
                         <Box p={3}>            
                             <Grid container spacing={3}>
-                                <Grid item lg={12} sm={12} xs={12}>
+                                <Grid item lg={6} sm={6} xs={12}>
                                     <TextField
                                         size="small"
                                         error={Boolean(touched.code && errors.code)}
@@ -227,22 +228,6 @@ const NewItem: FC<NewItemProps> = ({
                                         value={values.code}
                                         variant="outlined"
                                     />
-                                </Grid>
-                            </Grid>
-                            <Grid container spacing={3}>
-                                <Grid item lg={6} sm={6} xs={12}>  
-                                    <TextField
-                                        size="small"
-                                        error={Boolean(touched.description && errors.description)}
-                                        fullWidth
-                                        helperText={touched.description && errors.description}
-                                        label="Descripción"
-                                        name="description"
-                                        onBlur={handleBlur}
-                                        onChange={handleChange}
-                                        value={values.description}
-                                        variant="outlined"
-                                    />                    
                                 </Grid>
                                 <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
                                     <TextField
@@ -273,11 +258,28 @@ const NewItem: FC<NewItemProps> = ({
                                         size="small" 
                                         color="secondary" 
                                         aria-label="add to shopping cart"
-                                        onClick={() => handleModalOpen3()}
+                                        onClick={() => { setModalState(0);handleModalOpen3()}}
                                     >
                                         <AddIcon2 />
                                     </IconButton>
                                 </Grid>
+                            </Grid>
+                            <Grid container spacing={3}>
+                                <Grid item lg={12} sm={12} xs={12}>  
+                                    <TextField
+                                        size="small"
+                                        error={Boolean(touched.description && errors.description)}
+                                        fullWidth
+                                        helperText={touched.description && errors.description}
+                                        label="Descripción"
+                                        name="description"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.description}
+                                        variant="outlined"
+                                    />                    
+                                </Grid>
+                                
                             </Grid>
                             <Grid container spacing={3}>
                                 <Grid item lg={6} sm={6} xs={12}>  
@@ -313,7 +315,93 @@ const NewItem: FC<NewItemProps> = ({
                                 <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
                                     <TextField
                                         size="small"
-                                        label="Producto"
+                                        label="Familia"
+                                        name="family"
+                                        disabled
+                                        error={Boolean(touched.family && errors.family)}
+                                        helperText={touched.family && errors.family && 'Se requiere el familia'}
+                                        fullWidth
+                                        SelectProps={{ native: true }}
+                                        select
+                                        onBlur={handleBlur}
+                                        onChange={(e) => {
+                                            console.log(e.target.value)
+                                            _getSubFamilies(e.target.value);
+                                            handleChange(e);
+                                        }}
+                                        value={values.family}
+                                        variant="outlined"
+                                    >
+                                        {
+                                            family2.length === 0
+                                            &&
+                                            <option key="-1" value="-1"> -- -- -- </option>
+                                        }                                        
+                                        {family2.map((family) => (
+                                            <option
+                                            selected
+                                            key={family.ifm_c_iid}
+                                            value={family.ifm_c_iid}
+                                            >
+                                            {family.ifm_c_des}
+                                            </option>
+                                        ))}
+                                    </TextField>
+                                    <IconButton 
+                                        size="small" 
+                                        color="secondary" 
+                                        aria-label="add to shopping cart"
+                                        onClick={() => { setModalState(1);handleModalOpen3()}}
+                                    >
+                                        <AddIcon2 />
+                                    </IconButton>
+                                </Grid>
+                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
+                                    <TextField
+                                        size="small"
+                                        label="SubFamilia"
+                                        name="subfamily"
+                                        disabled
+                                        error={Boolean(touched.subfamily && errors.subfamily)}
+                                        helperText={touched.subfamily && errors.subfamily && 'Se requiere el subFamilia'}
+                                        fullWidth
+                                        SelectProps={{ native: true }}
+                                        select
+                                        variant="outlined"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.subfamily}
+                                        >
+                                        {
+                                            family2.length === 0
+                                            &&
+                                            <option key="-1" value="-1"> -- -- -- </option>
+                                        }
+                                        {subFamily2.map((subFamily) => (
+                                            <option
+                                            selected
+                                            key={subFamily.isf_c_iid}
+                                            value={subFamily.isf_c_iid}
+                                            >
+                                            {subFamily.isf_c_vdesc}
+                                            </option>
+                                        ))}
+                                    </TextField>
+                                    <IconButton 
+                                        size="small" 
+                                        color="secondary" 
+                                        aria-label="add to shopping cart"
+                                        onClick={() => { setModalState(2);handleModalOpen3()}}
+                                    >
+                                        <AddIcon2 />
+                                    </IconButton>
+                                </Grid>
+                            </Grid>
+                            <Grid container spacing={3}>
+                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
+                                    <TextField
+                                        size="small"
+                                        label="Producto Partida"
                                         name="pid"
                                         error={Boolean(touched.pid && errors.pid)}
                                         helperText={touched.pid && errors.pid && 'Se requiere el producto'}
@@ -350,91 +438,7 @@ const NewItem: FC<NewItemProps> = ({
                                 <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
                                     <></>
                                 </Grid>
-                            </Grid>
-                            <Grid container spacing={3}>
-                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
-                                    <TextField
-                                        size="small"
-                                        label="Familia"
-                                        name="family"
-                                        error={Boolean(touched.family && errors.family)}
-                                        helperText={touched.family && errors.family && 'Se requiere el familia'}
-                                        fullWidth
-                                        SelectProps={{ native: true }}
-                                        select
-                                        onBlur={handleBlur}
-                                        onChange={(e) => {
-                                            console.log(e.target.value)
-                                            _getSubFamilies(e.target.value);
-                                            handleChange(e);
-                                        }}
-                                        value={values.family}
-                                        variant="outlined"
-                                    >
-                                        {
-                                            family2.length === 0
-                                            &&
-                                            <option key="-1" value="-1"> -- -- -- </option>
-                                        }                                        
-                                        {family2.map((family) => (
-                                            <option
-                                            selected
-                                            key={family.ifm_c_iid}
-                                            value={family.ifm_c_iid}
-                                            >
-                                            {family.ifm_c_des}
-                                            </option>
-                                        ))}
-                                    </TextField>
-                                    <IconButton 
-                                        size="small" 
-                                        color="secondary" 
-                                        aria-label="add to shopping cart"
-                                        onClick={() => handleModalOpen3()}
-                                    >
-                                        <AddIcon2 />
-                                    </IconButton>
-                                </Grid>
-                                <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
-                                    <TextField
-                                        size="small"
-                                        label="SubFamilia"
-                                        name="subfamily"
-                                        error={Boolean(touched.subfamily && errors.subfamily)}
-                                        helperText={touched.subfamily && errors.subfamily && 'Se requiere el subFamilia'}
-                                        fullWidth
-                                        SelectProps={{ native: true }}
-                                        select
-                                        variant="outlined"
-                                        onBlur={handleBlur}
-                                        onChange={handleChange}
-                                        value={values.subfamily}
-                                        >
-                                        {
-                                            family2.length === 0
-                                            &&
-                                            <option key="-1" value="-1"> -- -- -- </option>
-                                        }
-                                        {subFamily2.map((subFamily) => (
-                                            <option
-                                            selected
-                                            key={subFamily.isf_c_iid}
-                                            value={subFamily.isf_c_iid}
-                                            >
-                                            {subFamily.isf_c_vdesc}
-                                            </option>
-                                        ))}
-                                    </TextField>
-                                    <IconButton 
-                                        size="small" 
-                                        color="secondary" 
-                                        aria-label="add to shopping cart"
-                                        onClick={() => handleModalOpen3()}
-                                    >
-                                        <AddIcon2 />
-                                    </IconButton>
-                                </Grid>
-                            </Grid>
+                            </Grid>                            
                         </Box>
                         <Divider />
                         {errors.submit && (
@@ -474,6 +478,7 @@ const NewItem: FC<NewItemProps> = ({
             >
                 {isModalOpen3 && (
                     <NewCategory
+                        modalState={modalState}
                         segments={segments}
                         families={families}
                         subFamilies={subFamilies}

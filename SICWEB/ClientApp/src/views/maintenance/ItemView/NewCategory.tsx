@@ -17,6 +17,7 @@ import useSettings from 'src/hooks/useSettings';
 import { getFamilies1, getSubFamilies, saveFamily, saveSubFamily, saveUnit } from 'src/apis/itemApi';
 
 interface NewCategoryProps {
+    modalState?: any,
     segments?: any[],
     families?: any[],
     subFamilies?: any[],
@@ -27,6 +28,7 @@ interface NewCategoryProps {
 }
 
 const NewCategory: FC<NewCategoryProps> = ({
+  modalState,
   segments,
   families,
   units,
@@ -66,26 +68,36 @@ const NewCategory: FC<NewCategoryProps> = ({
               variant="h4"
               color="textPrimary"
             >
-              {'Nuevo agregar'}
+              {
+                modalState === 0 && 'Unidad de Medida'
+              }
+              {
+                modalState === 1 && 'Familias'
+              }
+              {
+                modalState === 2 && 'Subfamilias'
+              }
             </Typography>
           </Box>
           <Divider />
-          <Box p={3}>   
+          {modalState === 0 &&
+          <><Box p={3}>   
             <Formik 
               initialValues={{
                 id: '-1',
                 unit: '',
-                flag: false
+                flag: true
               }}
               validationSchema={Yup.object().shape({
-                  unit: Yup.string().max(5000).required('Se requiere una unidad de medida.')
+                  unit: Yup.string().max(100, 'Debe tener 100 caracteres como máximo').required('Se requiere una unidad de medida.')
               })}
-              onSubmit={values => {
+              onSubmit={(values, {resetForm}) => {
                 saveSettings({saving: true});
                 window.setTimeout(() => {
                   saveUnit(values).then(res => {
                     saveSettings({saving: false});
                     _getInitialData();
+                    resetForm();
                     enqueueSnackbar('Tus datos se han guardado exitosamente.', {
                       variant: 'success'
                     });
@@ -159,13 +171,14 @@ const NewCategory: FC<NewCategoryProps> = ({
                             onChange={handleChange}
                             name="flag"
                             value={values.flag}
+                            checked={values.flag}
                             color="primary"
                           />
                         }
-                        label="Enable"
+                        label="Permitir"
                       />  
                       <Button type="submit" size="small" color="secondary" startIcon={<SaveIcon3 />} variant="contained">
-                        Save
+                        GUARDAR
                       </Button>   
                     </Grid>
                   </Grid>
@@ -173,25 +186,28 @@ const NewCategory: FC<NewCategoryProps> = ({
               )}
             </Formik>
           </Box>
-          <Divider />
-          <Box p={3}>
+          <Divider /></>
+          }
+          {modalState === 1 &&
+          <><Box p={3}>
             <Formik 
               initialValues={{
                 segId: -1,
                 id: '-1',
                 family: '',
-                flag: false
+                flag: true
               }}
               validationSchema={Yup.object().shape({
                 segId: Yup.number().min(0).required(),
-                family: Yup.string().max(5000).required('Se requiere una unidad de medida.')
+                family: Yup.string().max(100, 'Debe tener 100 caracteres como máximo').required('Se requiere una unidad de medida.')
               })}
-              onSubmit={values => {
+              onSubmit={(values, {resetForm}) => {
                 saveSettings({saving: true});
                 window.setTimeout(() => {
                   saveFamily(values).then(res => {
                     saveSettings({saving: false});
                     _getInitialData();
+                    resetForm();
                     _getFamilies(values.segId);
                     enqueueSnackbar('Tus datos se han guardado exitosamente.', {
                       variant: 'success'
@@ -291,13 +307,14 @@ const NewCategory: FC<NewCategoryProps> = ({
                             onChange={handleChange}
                             name="flag"
                             value={values.flag}
+                            checked={values.flag}
                             color="primary"
                           />
                         }
-                        label="Enable"
+                        label="Permitir"
                       />  
                       <Button type="submit" size="small" color="secondary" startIcon={<SaveIcon3 />} variant="contained">
-                        Save
+                        GUARDAR
                       </Button>   
                     </Grid>
                   </Grid>                  
@@ -306,25 +323,28 @@ const NewCategory: FC<NewCategoryProps> = ({
             
             </Formik>
           </Box>
-          <Divider />
-          <Box p={3}> 
+          <Divider /></>
+          }
+          {modalState === 2 &&
+          <><Box p={3}> 
             <Formik 
               initialValues={{
                 fid: '-1',
                 id: '-1',
                 subfamily: '',
-                flag: false
+                flag: true
               }}
               validationSchema={Yup.object().shape({
                 fid: Yup.number().min(0).required(),
-                subfamily: Yup.string().max(5000).required('Se requiere una unidad de medida.')
+                subfamily: Yup.string().max(100, 'Debe tener 100 caracteres como máximo').required('Se requiere el subFamilia')
               })}
-              onSubmit={values => {
+              onSubmit={(values, {resetForm}) => {
                 saveSettings({saving: true});
                 window.setTimeout(() => {
                   saveSubFamily(values).then(res => {
                     saveSettings({saving: false});
                     _getInitialData();
+                    resetForm();
                     _getSubFamilies(values.fid);
                     enqueueSnackbar('Tus datos se han guardado exitosamente.', {
                       variant: 'success'
@@ -417,7 +437,7 @@ const NewCategory: FC<NewCategoryProps> = ({
                           value={values.subfamily}
                           variant="outlined"
                           error={Boolean(touched.subfamily && errors.subfamily)}
-                          helperText={touched.subfamily && errors.subfamily && 'Se requiere el subFamilia'}
+                          helperText={touched.subfamily && errors.subfamily}
                       />              
                     </Grid>
                     <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>  
@@ -427,13 +447,14 @@ const NewCategory: FC<NewCategoryProps> = ({
                             onChange={handleChange}
                             name="flag"
                             value={values.flag}
+                            checked={values.flag}
                             color="primary"
                           />
                         }
-                        label="Enable"
+                        label="Permitir"
                       />  
                       <Button type="submit" size="small" color="secondary" startIcon={<SaveIcon3 />} variant="contained">
-                        Save
+                        GUARDAR
                       </Button>   
                     </Grid>
                   </Grid>                
@@ -443,8 +464,8 @@ const NewCategory: FC<NewCategoryProps> = ({
             </Formik>
              
           </Box>
-         
-          <Divider />
+          <Divider /></>
+          }
           <Box
             p={2}
             display="flex"

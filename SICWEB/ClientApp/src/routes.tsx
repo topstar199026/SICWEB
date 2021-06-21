@@ -77,13 +77,13 @@ const routes: Routes = [
     component: lazy(() => import('src/views/auth/RegisterView'))
   },
   {
-    path: '/app',
+    path: '/principal',
     guard: AuthGuard,
     layout: DashboardLayout,
     routes: [
       {
         exact: true,
-        path: '/app/dashboard',
+        path: '/principal/tablero',
         component: lazy(() => import('src/views/app/DashboardView'))
       }
     ]
