@@ -154,8 +154,10 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
           user
         }
       });
+      return 1;
+    }else{
+      return 0;
     }
-    return 1;
   };
 
   const logout = () => {

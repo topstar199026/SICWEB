@@ -48,7 +48,7 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
       }) => {
         try {
           const status = await login(values.email, values.password);
-          status === 1 && enqueueSnackbar('Usuario y/o Password incorrectos', {
+          status === 0 && enqueueSnackbar('Usuario y/o Password incorrectos', {
             variant: 'error'
           });
           if (isMountedRef.current) {
