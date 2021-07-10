@@ -93,10 +93,69 @@ const routes: Routes = [
     guard: AuthGuard,
     layout: DashboardLayout,
     routes: [
+      //MANTENIMIENTO
       {
-        exact: true,
+        exact: true,//CLIENTE / PROVEEDOR
+        path: '/interfaces/mantenimiento/frmRegCliente',
+        component: lazy(() => import('src/views/maintenance/ClienteView'))
+      },
+      {
+        exact: true,//ITEM
         path: '/interfaces/mantenimiento/frmregitem',
         component: lazy(() => import('src/views/maintenance/ItemView'))
+      },
+      {
+        exact: true,//EMPRESA
+        path: '/interfaces/mantenimiento/frmMantEmpresa',
+        component: lazy(() => import('src/views/maintenance/EmpresaView'))
+      },
+      {
+        exact: true,//MANTENIMIENTO IMPRESORAS
+        path: '/interfaces/mantenimiento/frmMantImpresoras',
+        component: lazy(() => import('src/views/maintenance/ImpresorasView'))
+      },
+      {
+        exact: true,//ESTILOS
+        path: '/interfaces/mantenimiento/frmRegEstilo',
+        component: lazy(() => import('src/views/maintenance/EstiloView'))
+      },
+      //ALMACÉN
+      {
+        exact: true,//MOVIMIENTO DE ENTRADA
+        path: '/interfaces/almacen/frmMovEntrada',
+        component: lazy(() => import('src/views/almacen/EntradaView'))
+      },
+      {
+        exact: true,//ALMACENES
+        path: '/interfaces/almacen/frmAlmacenes',
+        component: lazy(() => import('src/views/almacen/AlmacenesView'))
+      },
+      {
+        exact: true,//MOVIMIENTO DE SALIDA
+        path: '/interfaces/almacen/frmMovSalida',
+        component: lazy(() => import('src/views/almacen/SalidaView'))
+      },
+      //FACTURACIÓN
+      {
+        exact: true,//VENTA
+        path: '/interfaces/facturacion/frmVenta',
+        component: lazy(() => import('src/views/facturacion/VentaView'))
+      },
+      {
+        exact: true,//FACTURACIÓN AUTOMATICA
+        path: '/interfaces/facturacion/frmFactAutomatica',
+        component: lazy(() => import('src/views/facturacion/AutomaticaView'))
+      },
+      {
+        exact: true,//FACTURACIÓN IMPRESIÓN
+        path: '/interfaces/facturacion/frmFactImpresion',
+        component: lazy(() => import('src/views/facturacion/ImpresionView'))
+      },
+      //COMPRAS
+      {
+        exact: true,//ORDEN DE COMPRA
+        path: '/interfaces/compras/frmRegOC',
+        component: lazy(() => import('src/views/compras/OCView'))
       },
     ]
   },

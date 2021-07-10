@@ -79,7 +79,6 @@ export const SettingsProvider: FC<SettingsProviderProps> = ({ settings, children
   }, []);
 
   useEffect(() => {
-    console.log(currentSettings)
     document.dir = currentSettings.direction;
   }, [currentSettings]);
 

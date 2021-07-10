@@ -78,11 +78,8 @@ const NewItem: FC<NewItemProps> = ({
             setSubFamilies(res);
         })
     }
-
-    console.log('_initialValue',editID, _initialValue);
     const _getFamilyAndSub = (pid) => {
         getFamilyAndSub(pid).then(res => {
-            console.log(res)
             setFamily2([
                 res['family']
             ]);
@@ -103,7 +100,6 @@ const NewItem: FC<NewItemProps> = ({
     };
 
     const getInitialValues = () => {
-        console.log('_initialValue');
         if(editID > -1) {
             return _.merge({}, {
                 id: -1,
@@ -180,7 +176,6 @@ const NewItem: FC<NewItemProps> = ({
                             setSubmitting(false);
                             onCancel();
                         }).catch(err => {
-                            console.log('err',err)
                             _getInitialData();
                             enqueueSnackbar('No se pudo guardar.', {
                             variant: 'error'
@@ -221,12 +216,15 @@ const NewItem: FC<NewItemProps> = ({
                                         error={Boolean(touched.code && errors.code)}
                                         fullWidth
                                         helperText={touched.code && errors.code}
-                                        label="Código"
+                                        label={<label>Código <span style={{color: 'red'}}>*</span></label>}
                                         name="code"
                                         onBlur={handleBlur}
                                         onChange={handleChange}
                                         value={values.code}
                                         variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
                                     />
                                 </Grid>
                                 <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
@@ -234,7 +232,7 @@ const NewItem: FC<NewItemProps> = ({
                                         size="small"
                                         error={Boolean(touched.unit && errors.unit)}
                                         helperText={touched.unit && errors.unit && 'Se requiere unidad de medida'}
-                                        label="Unidad de Medida"
+                                        label={<label>Unidad de Medida <span style={{color: 'red'}}>*</span></label>}
                                         name="unit"
                                         fullWidth
                                         SelectProps={{ native: true }}
@@ -243,6 +241,9 @@ const NewItem: FC<NewItemProps> = ({
                                         onBlur={handleBlur}
                                         onChange={handleChange}
                                         value={values.unit}
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
                                         >
                                         <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
                                         {units.map((unit) => (
@@ -271,12 +272,15 @@ const NewItem: FC<NewItemProps> = ({
                                         error={Boolean(touched.description && errors.description)}
                                         fullWidth
                                         helperText={touched.description && errors.description}
-                                        label="Descripción"
+                                        label={<label>Descripción <span style={{color: 'red'}}>*</span></label>}
                                         name="description"
                                         onBlur={handleBlur}
                                         onChange={handleChange}
                                         value={values.description}
                                         variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
                                     />                    
                                 </Grid>
                                 
@@ -288,12 +292,15 @@ const NewItem: FC<NewItemProps> = ({
                                         error={Boolean(touched.purchaseprice && errors.purchaseprice)}
                                         fullWidth
                                         helperText={touched.purchaseprice && errors.purchaseprice && 'El precio de compra debe ser un número'}
-                                        label="Precio de Compra"
+                                        label={<label>Precio de Compra <span style={{color: 'red'}}>*</span></label>}
                                         name="purchaseprice"
                                         onBlur={handleBlur}
                                         onChange={handleChange}
                                         value={values.purchaseprice}
                                         variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
                                     />                    
                                 </Grid>
                                 <Grid item lg={6} sm={6} xs={12} >
@@ -302,12 +309,15 @@ const NewItem: FC<NewItemProps> = ({
                                         error={Boolean(touched.saleprice && errors.saleprice)}
                                         fullWidth
                                         helperText={touched.saleprice && errors.saleprice && 'El precio de venta debe ser un número'}
-                                        label="Precio de Venta"
+                                        label={<label>Precio de Venta <span style={{color: 'red'}}>*</span></label>}
                                         name="saleprice"
                                         onBlur={handleBlur}
                                         onChange={handleChange}
                                         value={values.saleprice}
                                         variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
                                     />
                                 </Grid>
                             </Grid>
@@ -315,7 +325,7 @@ const NewItem: FC<NewItemProps> = ({
                                 <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
                                     <TextField
                                         size="small"
-                                        label="Familia"
+                                        label={<label>Familia <span style={{color: 'red'}}>*</span></label>}
                                         name="family"
                                         disabled
                                         error={Boolean(touched.family && errors.family)}
@@ -325,12 +335,14 @@ const NewItem: FC<NewItemProps> = ({
                                         select
                                         onBlur={handleBlur}
                                         onChange={(e) => {
-                                            console.log(e.target.value)
                                             _getSubFamilies(e.target.value);
                                             handleChange(e);
                                         }}
                                         value={values.family}
                                         variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
                                     >
                                         {
                                             family2.length === 0
@@ -359,7 +371,7 @@ const NewItem: FC<NewItemProps> = ({
                                 <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
                                     <TextField
                                         size="small"
-                                        label="SubFamilia"
+                                        label={<label>SubFamilia <span style={{color: 'red'}}>*</span></label>}
                                         name="subfamily"
                                         disabled
                                         error={Boolean(touched.subfamily && errors.subfamily)}
@@ -371,6 +383,9 @@ const NewItem: FC<NewItemProps> = ({
                                         onBlur={handleBlur}
                                         onChange={handleChange}
                                         value={values.subfamily}
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
                                         >
                                         {
                                             family2.length === 0
@@ -401,7 +416,7 @@ const NewItem: FC<NewItemProps> = ({
                                 <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>
                                     <TextField
                                         size="small"
-                                        label="Producto Partida"
+                                        label={<label>Producto Partida <span style={{color: 'red'}}>*</span></label>}
                                         name="pid"
                                         error={Boolean(touched.pid && errors.pid)}
                                         helperText={touched.pid && errors.pid && 'Se requiere el producto'}
@@ -415,6 +430,9 @@ const NewItem: FC<NewItemProps> = ({
                                         }}
                                         value={values.pid}
                                         variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
                                     >
                                         <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
                                         {products.map((product) => (

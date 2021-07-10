@@ -57,8 +57,7 @@ const LoadingModal: FC<LoadingModalProps> = ({ isModalOpen, handleModalClose, })
   // const timer = useRef(null);
 
   const buttonClassname = clsx({
-    // [classes.buttonSuccess]: success,
-    [classes.buttonSuccess]: false,
+      [classes.buttonSuccess]: false,//success
   });
 
   // useEffect(() => {

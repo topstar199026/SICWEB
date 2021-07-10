@@ -118,8 +118,14 @@ namespace SICWEB.DbFactory
         public DbSet<T_PRODUCTO_PARTIDA> PRODUCTO_PARTIDA { get; set; }
         public DbSet<T_UNIDAD_MEDIDA> UNIDAD_MEDIDA { get; set; }
         public DbSet<T_ITEM> ITEM { get; set; }
-
-
+        public DbSet<T_ZONA_REPARTO> ZONA_REPARTO { get; set; }
+        public DbSet<T_DEPARTAMENTO> DEPARTAMENTO { get; set; }
+        public DbSet<T_PROVINCIA> PROVINCIA { get; set; }
+        public DbSet<T_DISTRITO> DISTRITO { get; set; }
+        public DbSet<T_CLI_CONTAC_CARGO> CLI_CONTAC_CARGO { get; set; }
+        public DbSet<T_CLI_CONTACTO> CLI_CONTACTO { get; set; }
+        public DbSet<T_CLIENTE> CLIENTE { get; set; }
+        
         public MaintenanceMssqlDbContext(DbContextOptions<MaintenanceMssqlDbContext> options) : base(options)
         {
 
@@ -158,6 +164,30 @@ namespace SICWEB.DbFactory
             //builder.Entity<T_ITEM_FAMILIA>().HasMany(p => p.T_ITEM_SUB_FAMILIAS).WithOne().HasForeignKey(c => c.isf_c_ifm_iid).HasPrincipalKey(p => p.ifm_c_iid);
 
             // builder.Entity<T_ITEM_SUB_FAMILIA>().HasOne(p => p.T_ITEM_FAMILIA).WithMany(b => b.T_ITEM_SUB_FAMILIAS).HasForeignKey(p => p.isf_c_ifm_iid).HasPrincipalKey(c => c.ifm_c_iid); 
+            
+            builder.Entity<T_ZONA_REPARTO>().ToTable(Prefix + "T_ZONA_REPARTO", Schema);
+            builder.Entity<T_ZONA_REPARTO>().HasKey(p => p.zona_rep_c_yid);
+            builder.Entity<T_ZONA_REPARTO>().Property(p => p.zona_rep_c_yid).ValueGeneratedOnAdd();
+
+            builder.Entity<T_DEPARTAMENTO>().ToTable(Prefix + "T_DEPARTAMENTO", Schema);
+            builder.Entity<T_DEPARTAMENTO>().HasKey(p => p.depa_c_ccod);
+
+            builder.Entity<T_PROVINCIA>().ToTable(Prefix + "T_PROVINCIA", Schema);
+            builder.Entity<T_PROVINCIA>().HasKey(p => p.prov_c_ccod);
+
+            builder.Entity<T_DISTRITO>().ToTable(Prefix + "T_DISTRITO", Schema);
+            builder.Entity<T_DISTRITO>().HasKey(p => p.dist_c_ccod_ubig);
+
+            builder.Entity<T_CLI_CONTAC_CARGO>().ToTable(Prefix + "T_CLI_CONTAC_CARGO", Schema);
+            builder.Entity<T_CLI_CONTAC_CARGO>().HasKey(p => p.cli_contac_cargo_c_yid);
+
+            builder.Entity<T_CLI_CONTACTO>().ToTable(Prefix + "T_CLI_CONTACTO", Schema);
+            builder.Entity<T_CLI_CONTACTO>().HasKey(p => p.cli_contac_c_iid);
+            builder.Entity<T_CLI_CONTACTO>().Property(p => p.cli_contac_c_iid).ValueGeneratedOnAdd();
+
+            builder.Entity<T_CLIENTE>().ToTable(Prefix + "T_CLIENTE", Schema);
+            builder.Entity<T_CLIENTE>().HasKey(p => p.cli_c_vdoc_id);
+            
         }
 
         public override int SaveChanges()

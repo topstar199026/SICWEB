@@ -102,7 +102,7 @@ const NewCategory: FC<NewCategoryProps> = ({
                       variant: 'success'
                     });
                   }).catch(err => {
-                    console.log('err',err)
+                    
                     _getInitialData();
                     enqueueSnackbar('No se pudo guardar.', {
                       variant: 'error'
@@ -151,7 +151,7 @@ const NewCategory: FC<NewCategoryProps> = ({
                       <TextField
                           size="small"
                           fullWidth
-                          label="Agregar Unidad de Medida"
+                          label={<label>Agregar Unidad de Medida <span style={{color: 'red'}}>*</span></label>}
                           name="unit"
                           onBlur={handleBlur}
                           onChange={handleChange} 
@@ -159,6 +159,9 @@ const NewCategory: FC<NewCategoryProps> = ({
                           helperText={touched.unit && errors.unit}
                           value={values.unit}
                           variant="outlined"
+                          InputLabelProps={{
+                            shrink: true
+                          }}
                       />                       
                     </Grid>
                     <Grid item lg={6} sm={6} xs={12} style={{display: 'flex'}}>  
@@ -175,7 +178,7 @@ const NewCategory: FC<NewCategoryProps> = ({
                             color="primary"
                           />
                         }
-                        label="Permitir"
+                        label="HABILITADO"
                       />  
                       <Button type="submit" size="small" color="secondary" startIcon={<SaveIcon3 />} variant="contained">
                         GUARDAR
@@ -213,7 +216,7 @@ const NewCategory: FC<NewCategoryProps> = ({
                       variant: 'success'
                     });
                   }).catch(err => {
-                    console.log('err',err)
+                    
                     _getInitialData();
                     enqueueSnackbar('No se pudo guardar.', {
                       variant: 'error'
@@ -237,8 +240,11 @@ const NewCategory: FC<NewCategoryProps> = ({
                     <Grid item lg={6} sm={6} xs={12}>
                       <TextField
                           size="small"
-                          label="Segmento"
-                          name="segId"
+                          label={<label>Segmento <span style={{color: 'red'}}>*</span></label>}
+                          InputLabelProps={{
+                            shrink: true
+                          }}
+                           name="segId"
                           fullWidth
                           SelectProps={{ native: true }}
                           select
@@ -290,8 +296,11 @@ const NewCategory: FC<NewCategoryProps> = ({
                       <TextField
                           size="small"
                           fullWidth
-                          label="Agregar Familia"
                           name="family"
+                          label={<label>Agregar Familia <span style={{color: 'red'}}>*</span></label>}
+                          InputLabelProps={{
+                            shrink: true
+                          }}
                           onChange={handleChange}
                           onBlur={handleBlur}
                           value={values.family}
@@ -311,7 +320,7 @@ const NewCategory: FC<NewCategoryProps> = ({
                             color="primary"
                           />
                         }
-                        label="Permitir"
+                        label="HABILITADO"
                       />  
                       <Button type="submit" size="small" color="secondary" startIcon={<SaveIcon3 />} variant="contained">
                         GUARDAR
@@ -350,7 +359,7 @@ const NewCategory: FC<NewCategoryProps> = ({
                       variant: 'success'
                     });
                   }).catch(err => {
-                    console.log('err',err)
+                    
                     _getInitialData();
                     enqueueSnackbar('No se pudo guardar.', {
                       variant: 'error'
@@ -374,7 +383,10 @@ const NewCategory: FC<NewCategoryProps> = ({
                     <Grid item lg={6} sm={6} xs={12}>
                         <TextField
                             size="small"
-                            label="Familias"
+                            label={<label>Familias <span style={{color: 'red'}}>*</span></label>}
+                            InputLabelProps={{
+                              shrink: true
+                            }}
                             name="fid"
                             fullWidth
                             SelectProps={{ native: true }}
@@ -430,7 +442,10 @@ const NewCategory: FC<NewCategoryProps> = ({
                       <TextField
                           size="small"
                           fullWidth
-                          label="	Agregar SubFamilia"
+                          label={<label>Agregar SubFamilia <span style={{color: 'red'}}>*</span></label>}
+                          InputLabelProps={{
+                            shrink: true
+                          }}                          
                           name="subfamily"
                           onBlur={handleBlur}
                           onChange={handleChange}
@@ -451,7 +466,7 @@ const NewCategory: FC<NewCategoryProps> = ({
                             color="primary"
                           />
                         }
-                        label="Permitir"
+                        label="HABILITADO"
                       />  
                       <Button type="submit" size="small" color="secondary" startIcon={<SaveIcon3 />} variant="contained">
                         GUARDAR

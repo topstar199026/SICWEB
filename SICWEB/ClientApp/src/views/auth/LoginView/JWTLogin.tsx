@@ -9,7 +9,9 @@ import {
   Button,
   FormHelperText,
   TextField,
-  makeStyles
+  makeStyles,
+  InputAdornment,
+  InputLabel
 } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 import useAuth from 'src/hooks/useAuth';
@@ -86,7 +88,10 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
             fullWidth
             autoFocus
             helperText={touched.email && errors.email}
-            label="Nombre de usuario"
+            label={<label>Nombre de usuario <span style={{color: 'red'}}>*</span></label>}
+            InputLabelProps={{
+              shrink: true
+            }}
             margin="normal"
             name="email"
             onBlur={handleBlur}
@@ -99,7 +104,10 @@ const JWTLogin: FC<JWTLoginProps> = ({ className, ...rest }) => {
             error={Boolean(touched.password && errors.password)}
             fullWidth
             helperText={touched.password && errors.password}
-            label="Contraseña"
+            label={<label>Contraseña <span style={{color: 'red'}}>*</span></label>}
+            InputLabelProps={{
+              shrink: true
+            }}
             margin="normal"
             name="password"
             onBlur={handleBlur}

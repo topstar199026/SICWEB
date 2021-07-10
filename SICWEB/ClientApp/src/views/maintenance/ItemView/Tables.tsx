@@ -221,9 +221,7 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
   };
 
   const handleSearch =() => {
-    console.log(filters)
     getItem(filters).then(res => {
-      console.log(res)
       setItems(res);
     }).catch(err => {
       setItems([]);
@@ -245,12 +243,7 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
     setPage(newPage);
   };
 
-  // useEffect(() => {
-  //   console.log('editID', editID);
-  //   setIsModalOpen(true);
-  // }, [editID])
 
-  
 
   return (
     <Card
@@ -384,7 +377,6 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
             </TableHead>
             <TableBody>
               {paginatedItems.map((item, index) => {
-                console.log(item.itm_c_ccodigo)
                 return (
                   <TableRow
                    style={{height: 30 }}
@@ -485,7 +477,6 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
                   setIsModalOpen2(false);
                   handleSearch();
               }).catch(err => {
-                  console.log('err',err);
                   
                 setIsModalOpen2(false);
                 handleSearch();

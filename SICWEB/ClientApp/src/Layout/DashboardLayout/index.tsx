@@ -49,7 +49,6 @@ const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   useEffect(() => {    
-    console.log('settings,settings',settings)
     setIsSaveModalOpen(settings.saving);
   }, [settings])
   return (

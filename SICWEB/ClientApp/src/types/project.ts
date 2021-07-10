@@ -87,8 +87,8 @@ export interface Project {
   rating: number;
   reviews?: ProjectReview[];
   startDate?: number;
-  tags?: string[]; //
-  technology?: string; //
+  tags?: string[];
+  technology?: string;
   title: string;
   type: 'Full-Time' | 'Part-Time';
   updatedAt: number;
