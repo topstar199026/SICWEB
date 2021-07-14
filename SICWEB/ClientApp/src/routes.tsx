@@ -119,7 +119,7 @@ const routes: Routes = [
         path: '/interfaces/mantenimiento/frmRegEstilo',
         component: lazy(() => import('src/views/maintenance/EstiloView'))
       },
-      //ALMACÉN
+      //ALMACï¿½N
       {
         exact: true,//MOVIMIENTO DE ENTRADA
         path: '/interfaces/almacen/frmMovEntrada',
@@ -135,19 +135,19 @@ const routes: Routes = [
         path: '/interfaces/almacen/frmMovSalida',
         component: lazy(() => import('src/views/almacen/SalidaView'))
       },
-      //FACTURACIÓN
+      //FACTURACIï¿½N
       {
         exact: true,//VENTA
         path: '/interfaces/facturacion/frmVenta',
         component: lazy(() => import('src/views/facturacion/VentaView'))
       },
       {
-        exact: true,//FACTURACIÓN AUTOMATICA
+        exact: true,//FACTURACIï¿½N AUTOMATICA
         path: '/interfaces/facturacion/frmFactAutomatica',
         component: lazy(() => import('src/views/facturacion/AutomaticaView'))
       },
       {
-        exact: true,//FACTURACIÓN IMPRESIÓN
+        exact: true,//FACTURACIï¿½N IMPRESIï¿½N
         path: '/interfaces/facturacion/frmFactImpresion',
         component: lazy(() => import('src/views/facturacion/ImpresionView'))
       },
@@ -156,7 +156,7 @@ const routes: Routes = [
         exact: true,//ORDEN DE COMPRA
         path: '/interfaces/compras/frmRegOC',
         component: lazy(() => import('src/views/compras/OCView'))
-      },
+      }
     ]
   },
   {

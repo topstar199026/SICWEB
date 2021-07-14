@@ -125,7 +125,9 @@ namespace SICWEB.DbFactory
         public DbSet<T_CLI_CONTAC_CARGO> CLI_CONTAC_CARGO { get; set; }
         public DbSet<T_CLI_CONTACTO> CLI_CONTACTO { get; set; }
         public DbSet<T_CLIENTE> CLIENTE { get; set; }
-        
+        public DbSet<T_NOMB_COM> NOMB_COM { get; set; }
+        public DbSet<T_CLI_DIRECCION> CLI_DIRECCION { get; set; }
+
         public MaintenanceMssqlDbContext(DbContextOptions<MaintenanceMssqlDbContext> options) : base(options)
         {
 
@@ -187,8 +189,17 @@ namespace SICWEB.DbFactory
 
             builder.Entity<T_CLIENTE>().ToTable(Prefix + "T_CLIENTE", Schema);
             builder.Entity<T_CLIENTE>().HasKey(p => p.cli_c_vdoc_id);
+
+            builder.Entity<T_NOMB_COM>().ToTable(Prefix + "T_NOMB_COM", Schema);
+            builder.Entity<T_NOMB_COM>().HasKey(p => p.nomb_com_c_iid);
+            builder.Entity<T_NOMB_COM>().Property(p => p.nomb_com_c_iid).ValueGeneratedOnAdd();
+
+            builder.Entity<T_CLI_DIRECCION>().ToTable(Prefix + "T_CLI_DIRECCION", Schema);
+            builder.Entity<T_CLI_DIRECCION>().HasKey(p => p.cli_direc_c_iid);
+            builder.Entity<T_CLI_DIRECCION>().Property(p => p.cli_direc_c_iid).ValueGeneratedOnAdd();
             
         }
+        
 
         public override int SaveChanges()
         {

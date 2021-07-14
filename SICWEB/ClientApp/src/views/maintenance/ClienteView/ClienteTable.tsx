@@ -33,7 +33,7 @@ import SearchIcon2 from '@material-ui/icons/Search';
 import AddIcon2 from '@material-ui/icons/Add';
 
 import type { Theme } from 'src/theme';
-import {getClientes, saveCliente, deleteCliente} from 'src/apis/clienteApi';
+import {getClients, saveCliente, deleteCliente} from 'src/apis/clienteApi';
 import useSettings from 'src/hooks/useSettings';
 import { useSnackbar } from 'notistack';
 import NewItem from './NewItem';
@@ -100,12 +100,12 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
   const classes = useStyles();
-  const [clientes, setClientes] = useState<any>([]);
+  const [clients, setClients] = useState<any>([]);
   const [filters, setFilters] = useState({
-    business: '',
+    company: '',
     ruc: '',
-    isCliente: true,
-    isProveedor: false,
+    client: true,
+    provider: false,
   });
   const [deleteID, setDeleteID] = useState('-1');
   const [editID, setEditID] = useState(-1);
@@ -113,7 +113,7 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
 
   const [page, setPage] = useState<number>(0);
   const [limit] = useState<number>(15);
-  const paginatedClientes = applyPagination(clientes, page, limit);
+  const paginatedClients = applyPagination(clients, page, limit);
   useEffect(() => {
     _getInitialData();
   }, [])
@@ -124,10 +124,10 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
     setIsModalOpen(false);
   };
   const handleSearch =() => {
-    getClientes(filters).then(res => {
-      setClientes(res);
+    getClients(filters).then(res => {
+      setClients(res);
     }).catch(err => {
-      setClientes([]);
+      setClients([]);
     })
   }
   const handleDelete =(id) => {
@@ -142,12 +142,11 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
     setPage(newPage);
   };
   const handleClienteChange=(event:any):void=>{
-    setFilters({...filters, isCliente:event.target.checked});
+    setFilters({...filters, client: event.target.checked});
     handleSearch();
   }
   const handleProveedorChange=(event:any):void=>{
-    setFilters({...filters, isProveedor:event.target.value});
-    handleSearch();
+    setFilters({...filters, provider: event.target.checked});
   }
   return (
     <Card
@@ -165,8 +164,8 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
                   label="Razón Social"
                   placeholder="Razón Social"
                   variant="outlined"
-                  value={filters.business}
-                  onChange={(e) => setFilters({...filters, business: e.target.value})}
+                  value={filters.company}
+                  onChange={(e) => setFilters({...filters, company: e.target.value})}
                 />
               </Grid>
               <Grid item lg={4} sm={6} xs={12}>
@@ -185,7 +184,7 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
                   className={classes.shippableField}
                   control={(
                     <Checkbox
-                      checked={!!filters.isCliente}
+                      checked={filters.client}
                       onChange={handleClienteChange}
                       name="Cliente"
                     />
@@ -196,7 +195,7 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
                   className={classes.shippableField}
                   control={(
                     <Checkbox
-                      checked={!!filters.isProveedor}
+                      checked={filters.provider}
                       onChange={handleProveedorChange}
                       name="Proveedor"
                     />
@@ -234,10 +233,7 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
                 RUBRO
                 </TableCell>
                 <TableCell>
-                PROVEEDOR
-                </TableCell>
-                <TableCell>
-                CLIENTE
+                PROVEEDOR / CLIENTE
                 </TableCell>
                 <TableCell align="right">
                   &nbsp;
@@ -245,24 +241,41 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedClientes.map((item, index) => {
+              {paginatedClients.map((item, index) => {
                 return (
                   <TableRow
                    style={{height: 30 }}
                     hover
-                    key={item.cliCVdocId}
+                    key={item.ruc}
                   >
                     <TableCell>
-                     {item.cliCVrazSoc}
+                     {item.ruc}
                     </TableCell>
                     <TableCell>
-                     {item.cli_c_vrubro}
+                     {item.company}
                     </TableCell>
                     <TableCell>
-                     {item.cli_c_bproveedor}
+                     {item.ditem}
                     </TableCell>
                     <TableCell>
-                     {item.cli_c_bcliente}
+                      <FormControlLabel
+                        className={classes.shippableField}
+                        control={(
+                          <Checkbox
+                            checked={item.provider}
+                          />
+                        )}
+                        label=""
+                      />
+                      <FormControlLabel
+                        className={classes.shippableField}
+                        control={(
+                          <Checkbox
+                            checked={item.client}
+                          />
+                        )}
+                        label=""
+                      />
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Editar" aria-label="Editar">
@@ -287,7 +300,7 @@ const ClienteTable: FC<TablesProps> = ({ className, ...rest }) => {
           </Table>
           <TablePagination
             component="div"
-            count={clientes.length}
+            count={clients.length}
             onChangePage={handlePageChange}
             onChangeRowsPerPage={()=>{}}
             page={page}

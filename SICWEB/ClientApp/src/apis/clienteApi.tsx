@@ -17,6 +17,18 @@ export const deleteCliente = async (id) => {
     else return [];
 }
 
+export const getClients = async (value) => {
+    const response = await axios.post<{}>('/api/client/clients', value);
+    if(response.status === 200) return response.data;
+    else return [];
+}
+
+export const saveClient = async (value) => {
+    const response = await axios.post<{}>('/api/client/saveClient', value);
+    if(response.status === 200) return response.data;
+    else return [];
+}
+
 export const getCargo = async () => {
     const response = await axios.get<{}>('/api/client/allCargo', { });
     if(response.status === 200) return response.data;

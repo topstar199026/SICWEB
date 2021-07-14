@@ -31,8 +31,7 @@ import {
 import AddIcon2 from '@material-ui/icons/Add';
 import type { Theme } from 'src/theme';
 import { Event } from 'src/types/calendar';
-import { saveItem } from 'src/apis/itemApi';
-import { getCargo, getDepartment, getProvince, getDistrict } from 'src/apis/clienteApi';
+import { saveClient, getCargo, getDepartment, getProvince, getDistrict } from 'src/apis/clienteApi';
 import { useSnackbar } from 'notistack';
 import useSettings from 'src/hooks/useSettings';
 import {
@@ -195,17 +194,8 @@ const NewItem: FC<NewItemProps> = ({
             provider: false,
             anniversary: null,//new Date(),
             constitution: null,//new Date(),
-            delivery: 1,
-            direction: [{id: -1, value: '', department: -1, province: -1, district: -1, kind: -1}],
-
-            code: '',
-            description: '',
-            unit: -1,
-            purchaseprice: '',
-            saleprice: '',
-            pid: -1,
-            family: -1,
-            subfamily: -1,
+            delivery: '1',
+            direction: [{id: '-1', value: '', department: '-1', province: '-1', district: '-1', kind: '0'}],
             submit: null
         };
 
@@ -255,25 +245,15 @@ const NewItem: FC<NewItemProps> = ({
     
         
     };
-
-    useEffect(() => {
-        // editID > -1 && _getFamilyAndSub(_initialValue[editID].pro_partida_c_iid);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-
-
-
-    
     
     return (
         <>
             <Formik
                 initialValues={getInitialValues()}
                 validationSchema={Yup.object().shape({
-                    person: Yup.number().min(0, 'Se requiere el tipo de persona').max(1, 'Se requiere el tipo de persona').required('Se requiere el tipo de persona'),
                     company: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('Se requiere una razón social'),
-                    ruc: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('Se requiere una ruc'),
+                    //ruc: Yup.string().test('len', 'El Ruc debe tener 11 dígitos', val => val.length === 11).required('Se requiere una ruc').matches(/^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/, 'El Ruc debe tener 11 dígitos'),
+                    ruc: Yup.string().length(11, 'El Ruc debe tener 11 dígitos').required('Se requiere una ruc').matches(/^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/, 'El Ruc debe tener 11 dígitos'),
                     trade: Yup.array()
                     .of(
                         Yup.object().shape({
@@ -282,10 +262,11 @@ const NewItem: FC<NewItemProps> = ({
                     )
                     .required('Must have Nombre Comercial')
                     .min(1, 'Minimum of 1 Nombre Comercial'),
-                    snumber: Yup.string().max(200, 'Debe tener 200 caracteres como máximo'),
+                    snumber: Yup.string().max(30, 'Debe tener 30 caracteres como máximo'),
                     ditem: Yup.string().max(200, 'Debe tener 200 caracteres como máximo'),
-                    phone: Yup.string().max(15, 'Debe tener 15 caracteres como máximo').matches(/^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/, 'Número de teléfono incorrecto'),
-                    delivery: Yup.number().min(0).required(),
+                    phone: Yup.string().max(15, 'Debe tener 15 caracteres como máximo').matches(/^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/, 'Número de teléfono incorrecto')
+                    .required('Must have Teléfono'),
+                    delivery: Yup.number().min(1).required(),
                     direction: Yup.array()
                     .of(
                         Yup.object().shape({
@@ -298,14 +279,6 @@ const NewItem: FC<NewItemProps> = ({
                     )
                     .required('Must have Nombre Comercial')
                     .min(1, 'Minimum of 1 Nombre Comercial'),
-
-
-                    code: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('Se requiere el código'),
-                    description: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('Se requiere una descripción'),
-                    unit: Yup.number().min(0).required(),
-                    purchaseprice: Yup.number().required('Se requiere el precio de compra'),
-                    saleprice: Yup.number().required('Se requiere el Precio de Venta'),
-                    pid: Yup.number().min(0).required()
                 })}
                 onSubmit={async (values, {
                     resetForm,
@@ -314,8 +287,10 @@ const NewItem: FC<NewItemProps> = ({
                     setSubmitting
                 }) => {
                     saveSettings({saving: true});
+                    let _v = values;
+                    _v['contact'] = contacts;
                     window.setTimeout(() => {
-                        saveItem(values).then(res => {
+                        saveClient(values).then(res => {
                             saveSettings({saving: false});
                             _getInitialData();
                             enqueueSnackbar('Tus datos se han guardado exitosamente.', {
@@ -373,7 +348,8 @@ const NewItem: FC<NewItemProps> = ({
                                         SelectProps={{ native: true }}
                                         onBlur={handleBlur}
                                         onChange={(e) => {
-                                            handleChange(e);
+                                            // handleChange(e);
+                                            setFieldValue('person', parseInt(e.target.value, 10) === 0)
                                         }}
                                         value={values.person}
                                         variant="outlined"
@@ -850,7 +826,11 @@ const NewItem: FC<NewItemProps> = ({
                                                                             shrink: true
                                                                         }}
                                                                     >
-                                                                        <option selected key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                                                        <option selected key="0" value="0">Tipo</option>
+                                                                        <option selected key="1" value="1">Fiscal</option>
+                                                                        <option selected key="2" value="2">Sucursal</option>
+                                                                        <option selected key="3" value="3">Facturación</option>
+                                                                        {/* <option selected key="-1" value="-1">{'-- Seleccionar --'}</option> */}
                                                                         {/* {products.map((product) => (
                                                                             <option
                                                                             key={product.pro_partida_c_iid}

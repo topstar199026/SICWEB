@@ -37,6 +37,7 @@ import {getClientes, deleteCliente} from 'src/apis/clienteApi';
 import useSettings from 'src/hooks/useSettings';
 import ConfirmModal from 'src/components/ConfirmModal';
 import { useSnackbar } from 'notistack';
+import NewEstilo from './NewEstilo';
 
 interface TablesProps {
   className?: string;
@@ -294,7 +295,31 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
           />
         </Box>
       </PerfectScrollbar>
-      
+      <Dialog
+        maxWidth="md"
+        fullWidth
+        onClose={handleModalClose}
+        open={isModalOpen}
+      >
+        {/* Dialog renders its body even if not open */}
+        {isModalOpen && (
+          <NewEstilo
+            editID = {editID}
+            onCancel={handleModalClose}
+          />
+        )}
+      </Dialog>
+      <ConfirmModal 
+        open={isModalOpen2}
+        title={'¿Eliminar este artículo?'}
+        setOpen={() => setIsModalOpen2(false)}
+        onConfirm={() => {  
+          saveSettings({saving: true});  
+          window.setTimeout(() => {
+            saveSettings({saving: false});
+          }, 1000);   
+        }}
+      />
     </Card>
   );
 };

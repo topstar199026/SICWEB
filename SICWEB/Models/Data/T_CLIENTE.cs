@@ -22,7 +22,7 @@ namespace SICWEB
         [Column(TypeName = "VARCHAR")]
         [StringLength(15)]
         public string cli_c_ctlf { get; set; }
-        public DateTime cli_c_dfec_aniv { get; set; }
+        public DateTime? cli_c_dfec_aniv { get; set; }
         public bool cli_c_btipo_pers { get; set; }
         [Column(TypeName = "CHAR")]
         [StringLength(8)]
@@ -34,28 +34,8 @@ namespace SICWEB
         public Byte zona_rep_c_yid { get; set; }
         public DateTime cli_c_dfecharegistra { get; set; }
         public DateTime cli_c_dfechaactualiza { get; set; }
-        public DateTime cli_c_dfec_const { get; set; }
+        public DateTime? cli_c_dfec_const { get; set; }
         public bool cli_c_bproveedor { get; set; }
         public bool cli_c_bcliente { get; set; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        public Decimal itm_c_dprecio_compra { get; set; }
-        public Byte und_c_yid { get; set; }
-        public bool itm_c_bactivo { get; set; }
-        public Decimal itm_c_dprecio_venta { get; set; }
-        public int pro_partida_c_iid { get; set; }
     }
 }
