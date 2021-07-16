@@ -248,4 +248,99 @@ namespace SICWEB.DbFactory
         }
 
     }
+    public class ConfeccionMssqlDbContext : DbContext
+    {
+        public string Schema = "Confeccion";
+        public string Prefix = "SIC_";
+        public string CurrentUserId { get; set; }
+
+        public DbSet<T_ESTILO> ESTILO { get; set; }
+        public DbSet<T_TALLA> TALLA { get; set; }
+        public DbSet<T_CATEGORIA> CATEGORIA { get; set; }
+        public DbSet<T_COLOR> COLOR { get; set; }
+        public DbSet<T_MARCA> MARCA { get; set; }
+        public DbSet<T_MARCA_CATEGORIA> MARCA_CATEGORIA { get; set; }
+        public DbSet<T_MARCA_COLOR> MARCA_COLOR { get; set; }
+        
+        public ConfeccionMssqlDbContext(DbContextOptions<ConfeccionMssqlDbContext> options) : base(options)
+        {
+
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+           
+            builder.Entity<T_ESTILO>().ToTable(Prefix + "T_ESTILO", Schema);
+            builder.Entity<T_ESTILO>().HasKey(p => new { p.estilo_c_iid });
+            builder.Entity<T_ESTILO>().Property(p => p.estilo_c_iid).ValueGeneratedOnAdd();
+
+            builder.Entity<T_TALLA>().ToTable(Prefix + "T_TALLA", Schema);
+            builder.Entity<T_TALLA>().HasKey(p => new { p.talla_c_vid });
+
+            builder.Entity<T_CATEGORIA>().ToTable(Prefix + "T_CATEGORIA", Schema);
+            builder.Entity<T_CATEGORIA>().HasKey(p => new { p.categoria_c_vid });
+
+            builder.Entity<T_COLOR>().ToTable(Prefix + "T_COLOR", Schema);
+            builder.Entity<T_COLOR>().HasKey(p => new { p.color_c_vid });
+
+            builder.Entity<T_MARCA>().ToTable(Prefix + "T_MARCA", Schema);
+            builder.Entity<T_MARCA>().HasKey(p => new { p.marca_c_vid });
+
+            builder.Entity<T_MARCA_CATEGORIA>().ToTable(Prefix + "T_MARCA_CATEGORIA", Schema);
+            builder.Entity<T_MARCA_CATEGORIA>().HasKey(p => new { p.marca_categoria_c_vid });
+
+            builder.Entity<T_MARCA_COLOR>().ToTable(Prefix + "T_MARCA_COLOR", Schema);
+            builder.Entity<T_MARCA_COLOR>().HasKey(p => new { p.marca_color_c_vid });
+            
+        }
+
+        public override int SaveChanges()
+        {
+            UpdateAuditEntities();
+            return base.SaveChanges();
+        }
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            UpdateAuditEntities();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            UpdateAuditEntities();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            UpdateAuditEntities();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void UpdateAuditEntities()
+        {
+            var modifiedEntries = ChangeTracker.Entries()
+                .Where(x => x.Entity is IAuditableEntity && (x.State == EntityState.Added || x.State == EntityState.Modified));
+
+            foreach (var entry in modifiedEntries)
+            {
+                var entity = (IAuditableEntity)entry.Entity;
+                DateTime now = DateTime.UtcNow;
+
+                if (entry.State == EntityState.Added)
+                {
+                    entity.CreatedDate = now;
+                    entity.CreatedBy = CurrentUserId;
+                }
+                else
+                {
+                    base.Entry(entity).Property(x => x.CreatedBy).IsModified = false;
+                    base.Entry(entity).Property(x => x.CreatedDate).IsModified = false;
+                }
+                entity.UpdatedDate = now;
+                entity.UpdatedBy = CurrentUserId;
+            }
+        }
+
+    }
+
 }

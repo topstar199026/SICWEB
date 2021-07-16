@@ -33,12 +33,12 @@ import SearchIcon2 from '@material-ui/icons/Search';
 import AddIcon2 from '@material-ui/icons/Add';
 
 import type { Theme } from 'src/theme';
-import {getClientes, deleteCliente} from 'src/apis/clienteApi';
 import useSettings from 'src/hooks/useSettings';
 import ConfirmModal from 'src/components/ConfirmModal';
 import { useSnackbar } from 'notistack';
 import NewEstilo from './NewEstilo';
 
+import { deleteStyle, getStyle } from 'src/apis/styleApi';
 interface TablesProps {
   className?: string;
 }
@@ -110,12 +110,11 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
     responsiveFontSizes: settings.responsiveFontSizes,
     theme: settings.theme
   });
-  const [clientes, setClientes] = useState<any>([]);
+  const [styles, setStyles] = useState<any>([]);
   const [filters, setFilters] = useState({
-    business: '',
-    ruc: '',
-    isCliente: true,
-    isProveedor: false,
+    code: '',
+    name: '',
+    color: ''
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteID, setDeleteID] = useState('-1');
@@ -123,7 +122,7 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
   const [isModalOpen2, setIsModalOpen2] = useState(false);
   const [page, setPage] = useState<number>(0);
   const [limit] = useState<number>(15);
-  const paginatedClientes = applyPagination(clientes, page, limit);
+  const paginatedStyles = applyPagination(styles, page, limit);
   useEffect(() => {
     _getInitialData();
   }, [])
@@ -134,10 +133,10 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
     setIsModalOpen(false);
   };
   const handleSearch =() => {
-    getClientes(filters).then(res => {
-      setClientes(res);
+    getStyle(filters).then(res => {
+      setStyles(res);
     }).catch(err => {
-      setClientes([]);
+      setStyles([]);
     })
   }
   const handleDelete =(id) => {
@@ -167,8 +166,8 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
                   label="Código"
                   placeholder="Código"
                   variant="outlined"
-                  value={filters.business}
-                  onChange={(e) => setFilters({...filters, business: e.target.value})}
+                  value={filters.code}
+                  onChange={(e) => setFilters({...filters, code: e.target.value})}
                 />
               </Grid>
               <Grid item lg={4} sm={6} xs={12}>
@@ -178,8 +177,8 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
                   label="Nombre"
                   placeholder="Nombre"
                   variant="outlined"
-                  value={filters.ruc}
-                  onChange={(e) => setFilters({...filters, ruc: e.target.value})}
+                  value={filters.name}
+                  onChange={(e) => setFilters({...filters, name: e.target.value})}
                 />
               </Grid>
               <Grid item lg={4} sm={6} xs={12}>
@@ -189,8 +188,8 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
                   label="Color"
                   placeholder="Color"
                   variant="outlined"
-                  value={filters.ruc}
-                  onChange={(e) => setFilters({...filters, ruc: e.target.value})}
+                  value={filters.color}
+                  onChange={(e) => setFilters({...filters, color: e.target.value})}
                 />
               </Grid>
             </Grid>
@@ -202,7 +201,7 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
                 <Button onClick={handleSearch} variant="contained" color="primary" startIcon={<SearchIcon2 />}>{'Buscar'}</Button>
               </Grid>
               <Grid item>
-                <Button variant="contained" color="secondary" startIcon={<AddIcon2 />} onClick={() => handleEdit('-1')}>{'Nuevo'}</Button>
+                <Button variant="contained" color="secondary" startIcon={<AddIcon2 />} onClick={() => handleEdit(-1)}>{'Nuevo'}</Button>
               </Grid>
             </Grid>
           </Grid>      
@@ -244,24 +243,36 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedClientes.map((item, index) => {
+              {paginatedStyles.map((item, index) => {
                 return (
                   <TableRow
                    style={{height: 30 }}
                     hover
-                    key={item.cli_c_vraz_soc}
+                    key={item.estilo_c_iid}
                   >
                     <TableCell>
-                     {item.cli_c_vdoc_id}
+                     {item.estilo_c_vcodigo}
                     </TableCell>
                     <TableCell>
-                     {item.cli_c_vrubro}
+                     {item.estilo_c_vnombre}
                     </TableCell>
                     <TableCell>
-                     {item.cli_c_bproveedor}
+                     {item.estilo_c_vdescripcion}
                     </TableCell>
                     <TableCell>
-                     {item.cli_c_bcliente}
+                     {item.itemName}
+                    </TableCell>
+                    <TableCell>
+                     {item.categoryName}
+                    </TableCell>
+                    <TableCell>
+                     {item.colorName}
+                    </TableCell>
+                    <TableCell>
+                     {item.sizeName}
+                    </TableCell>
+                    <TableCell>
+                     {item.brandName}
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Editar" aria-label="Editar">
@@ -272,7 +283,7 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Eliminar" aria-label="Eliminar">
-                        <IconButton onClick={() =>handleDelete(item.itm_c_iid)}>
+                        <IconButton onClick={() =>handleDelete(item.estilo_c_iid)}>
                           <SvgIcon fontSize="small">
                             <DeleteIcon />
                           </SvgIcon>
@@ -286,7 +297,7 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
           </Table>
           <TablePagination
             component="div"
-            count={clientes.length}
+            count={styles.length}
             onChangePage={handlePageChange}
             onChangeRowsPerPage={()=>{}}
             page={page}
@@ -305,6 +316,8 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
         {isModalOpen && (
           <NewEstilo
             editID = {editID}
+            _initialValue = {styles}
+            handleSearch = {handleSearch}
             onCancel={handleModalClose}
           />
         )}
@@ -315,9 +328,24 @@ const EstiloTable: FC<TablesProps> = ({ className, ...rest }) => {
         setOpen={() => setIsModalOpen2(false)}
         onConfirm={() => {  
           saveSettings({saving: true});  
-          window.setTimeout(() => {
-            saveSettings({saving: false});
-          }, 1000);   
+          deleteStyle(deleteID).then(res => {
+              saveSettings({saving: false});
+              handleSearch();
+              enqueueSnackbar('Tus datos se han guardado exitosamente.', {
+              variant: 'success'
+              });
+              
+              setIsModalOpen2(false);
+              handleSearch();
+          }).catch(err => {
+              
+            setIsModalOpen2(false);
+            handleSearch();
+              enqueueSnackbar('No se pudo guardar.', {
+              variant: 'error'
+              });
+              saveSettings({saving: false});
+          });  
         }}
       />
     </Card>

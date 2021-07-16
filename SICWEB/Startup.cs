@@ -35,6 +35,8 @@ namespace SICWEB
                 options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
             services.AddDbContext<MaintenanceMssqlDbContext>(options =>
                 options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
+            services.AddDbContext<ConfeccionMssqlDbContext>(options =>
+                options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
             services.AddDbContext<SICDBWEB_MYSContext>(options =>
                 options.UseSqlServer(_configuration.GetConnectionString("MSSQLConnection")));
             

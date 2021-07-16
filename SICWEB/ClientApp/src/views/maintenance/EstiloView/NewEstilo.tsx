@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import * as Yup from 'yup';
 import { Field, FieldArray, Formik } from 'formik';
+import axios from 'src/utils/axios';
 import {
   Box,
   Typography,
@@ -26,15 +27,19 @@ import AddIcon2 from '@material-ui/icons/Add';
 import type { Theme } from 'src/theme';
 import type { Event } from 'src/types/calendar';
 import NewCategory from './NewCategory';
-import { getFamilyAndSub, getSubFamilies, saveItem } from 'src/apis/itemApi';
+import { getBrands, getCategories, getCategory, getColor, getColors, getTallas, saveStyle } from 'src/apis/styleApi';
 import { useSnackbar } from 'notistack';
 import useSettings from 'src/hooks/useSettings';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import DeleteIcon from '@material-ui/icons/Delete';
+import { getItem } from 'src/apis/itemApi';
+import { styles } from '@material-ui/pickers/views/Calendar/Calendar';
 
 interface NewEstiloProps {
     editID: number,
+    _initialValue?: any,
     onCancel?: () => void;
+    handleSearch?: () => void;
 }
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -46,45 +51,121 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 const NewEstilo: FC<NewEstiloProps> = ({
     editID,
-    onCancel
+    _initialValue,
+    onCancel,
+    handleSearch
 }) => {
     const classes = useStyles();
     const { enqueueSnackbar } = useSnackbar();
     const { saveSettings } = useSettings();   
 
-    const getInitialValues = () => {
-        return {
+    const [brands, setBrands] = useState<any>([]);
+    const [colors, setColors] = useState<any>([]);
+    const [categories, setCategories] = useState<any>([]);
+    const [tallas, setTallas] = useState<any>([]);
+    const [items, setItems] = useState<any>([]);
+
+    useEffect(() => {
+        getBrands().then(res => {
+            setBrands(res)
+         }).catch(err => {
+            setBrands([]);
+        });
+        getTallas().then(res => {
+            setTallas(res)
+         }).catch(err => {
+            setTallas([]);
+        });
+        getItem({
             code: '',
-            name: '',
             description: '',
-            item: '',
-            image: null,
-            imageUrl: null,
-            brand: [
-                {id: '-1', value: 'ab'},
-                {id: '-1', value: 'ab'}
-            ],
-            color: [
-                {id: '-1', value: 'ab'},
-                {id: '-1', value: 'ab'}
-            ],
-            category: [
-                {id: '-1', value: 'ab'},
-                {id: '-1', value: 'ab'}
-            ],
-            size: 0,
-            submit: null
-        };
-        
+            family: '-1',
+            subFamily: '-1',
+        }).then(res => {
+            setItems(res)
+         }).catch(err => {
+            setItems([]);
+        });
+        if(editID > -1) {
+            const _i = _get(editID);
+            getColor({id: _i.marca_c_vid}).then(res => {
+                setColors(res)
+             }).catch(err => {
+                setColors([]);
+            });
+            getCategory({id:_i.marca_c_vid}).then(res => {
+                setCategories(res)
+             }).catch(err => {
+                setCategories([]);
+            });
+        }
+    }, [])
+
+    const _get = (id) => {
+        return _initialValue[id];
+    }
+
+    const getInitialValues = () => {
+        if(editID > -1) {
+            const _i = _get(editID);
+            return _.merge({}, {
+                id: '-1',
+                code: '',
+                name: '',
+                description: '',
+                item: -1,
+                image: null,
+                imageUrl: null,
+                brand: '-1',
+                color: '-1',
+                category: '-1',
+                size: '-1',
+                submit: null
+              }, {
+                id: _i.estilo_c_iid,
+                code: _i.estilo_c_vcodigo,
+                name: _i.estilo_c_vnombre,
+                description: _i.estilo_c_vdescripcion,
+                item: _i.itm_c_iid,
+                image: null,
+                imageUrl: null,
+                brand: _i.marca_c_vid,
+                color:  _i.marca_color_c_vid,
+                category:  _i.marca_categoria_c_vid,
+                size:  _i.talla_c_vid,
+                submit: null
+            });
+        }else{
+            return {
+                id: '-1',
+                code: '',
+                name: '',
+                description: '',
+                item: '-1',
+                image: null,
+                imageUrl: null,
+                brand: '-1',
+                color: '-1',
+                category: '-1',
+                size: '-1',
+                submit: null
+            };
+        }        
     };
     return (
         <>
             <Formik
                 initialValues={getInitialValues()}
                 validationSchema={Yup.object().shape({
-                    code: Yup.string().max(20, 'Debe tener 20 caracteres como máximo').required('Este campo es obligatorio.'),
-                    name: Yup.string().max(50, 'Debe tener 50 caracteres como máximo').required('Este campo es obligatorio.'),
+                    code: Yup.string().max(20, 'Debe tener 20 caracteres como máximo').required('Este campo es requerido.'),
+                    name: Yup.string().max(50, 'Debe tener 50 caracteres como máximo').required('Este campo es requerido.'),
                     description: Yup.string().max(200, 'Debe tener 50 caracteres como máximo'),
+                    item: Yup.mixed().notOneOf(['-1'], 'Este campo es requerido.'),
+                    brand: Yup.mixed().notOneOf(['-1'], 'Este campo es requerido.'),
+                    color: Yup.mixed().notOneOf(['-1'], 'Este campo es requerido.'),
+                    category: Yup.mixed().notOneOf(['-1'], 'Este campo es requerido.'),
+                    size: Yup.mixed().notOneOf(['-1'], 'Este campo es requerido.'),
+                    image: Yup.mixed().required('Este campo es requerido.'),
                     
                 })}
                 onSubmit={async (values, {
@@ -94,6 +175,28 @@ const NewEstilo: FC<NewEstiloProps> = ({
                     setSubmitting
                 }) => {
                     console.log(values)
+                
+                    saveSettings({saving: true});
+                    window.setTimeout(() => {
+                        saveStyle(values).then(res => {
+                            saveSettings({saving: false});
+                            // _getInitialData();
+                            enqueueSnackbar('Tus datos se han guardado exitosamente.', {
+                            variant: 'success'
+                            });
+                            resetForm();
+                            setStatus({ success: true });
+                            setSubmitting(false);
+                            handleSearch();
+                            onCancel();
+                        }).catch(err => {
+                            // _getInitialData();
+                            enqueueSnackbar('No se pudo guardar.', {
+                            variant: 'error'
+                            });
+                            saveSettings({saving: false});
+                        });
+                    }, 1000);
                 }}
             >
                 {({
@@ -190,156 +293,106 @@ const NewEstilo: FC<NewEstiloProps> = ({
                                         <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
                                             <TextField
                                                 size="small"
-                                                fullWidth
                                                 label={<label>Item <span style={{color: 'red'}}>*</span></label>}
+                                                name="item"
+                                                error={Boolean(touched.item && errors.item)}
+                                                helperText={touched.item && errors.item}
+                                                fullWidth
+                                                SelectProps={{ native: true }}
+                                                select
+                                                onBlur={handleBlur}
+                                                onChange={(e) => {
+                                                    handleChange(e);
+                                                }}
+                                                value={values.item}
+                                                variant="outlined"
                                                 InputLabelProps={{
                                                     shrink: true
                                                 }}
-                                                variant="outlined"
-                                                name="item"
-                                                onBlur={handleBlur}
-                                                onChange={handleChange}
-                                                value={values.item}
-                                                error={Boolean(touched.item && errors.item)}
-                                                helperText={touched.item && errors.item}
-                                            />
+                                            >
+                                                <option key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                                {items.map((item) => (
+                                                    <option
+                                                    key={item.itm_c_iid}
+                                                    value={item.itm_c_iid}
+                                                    >
+                                                    {item.itm_c_ccodigo}
+                                                    </option>
+                                                ))}
+                                             </TextField>
                                         </Grid>
-                                        <FieldArray
-                                            name="brand"
-                                            render={arrayHelpers => (
-                                                <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
-                                                    <Grid container style={{background: '#efefef'}}>
-                                                        <Grid item xl={11} xs={11}>
-                                                            <Grid container spacing={1}>
-                                                                <Grid  item xl={12} xs={12}>
-                                                                    <label style={{fontSize: 12.5, color: 'rgba(0, 0, 0, 0.54)'}}>&nbsp;&nbsp;&nbsp;&nbsp;Marca</label>
-                                                                </Grid>                                                            
-                                                                {values.brand && values.brand.length > 0 ? 
-                                                                    (
-                                                                        values.brand.map((_brand, index) => (
-                                                                            <Grid key={index} item xl={12} xs={12}>
-                                                                                <TextField
-                                                                                    size="small"
-                                                                                    error={Boolean(
-                                                                                        touched.brand && touched.brand[index] && touched.brand[index].value &&
-                                                                                        errors.brand && errors.brand[index] && errors.brand[index]
-                                                                                    )}
-                                                                                    fullWidth
-                                                                                    helperText={
-                                                                                        <>{touched.brand && touched.brand[index] && touched.brand[index].value &&
-                                                                                        errors.brand && errors.brand[index] && errors.brand[index]['value']}</>
-                                                                                    }
-                                                                                    label={<label><span style={{color: 'red'}}>*</span></label>}
-                                                                                    InputLabelProps={{
-                                                                                        shrink: true
-                                                                                    }}
-                                                                                    InputProps={{
-                                                                                        endAdornment: <IconButton 
-                                                                                            size="small" 
-                                                                                            color="primary" 
-                                                                                            aria-label="add to shopping cart"
-                                                                                            onClick={() => { values.brand.length > 1 && arrayHelpers.remove(index)}}
-                                                                                        >
-                                                                                            <DeleteIcon />
-                                                                                        </IconButton>
-                                                                                    }}
-                                                                                    name={`brand[${index}].value`}
-                                                                                    onBlur={handleBlur}
-                                                                                    onChange={handleChange}
-                                                                                    value={values.brand[index].value}
-                                                                                    variant="outlined"
-                                                                                />
-                                                                            </Grid>
-                                                                        ))
-                                                                    ) : (
-                                                                        <></>
-                                                                    )
-                                                                }
-                                                            </Grid>
-                                                        </Grid>
-                                                        <Grid item xl={1} xs={1}>
-                                                            <IconButton 
-                                                                size="small" 
-                                                                color="secondary" 
-                                                                aria-label="add to shopping cart"
-                                                                onClick={() => { arrayHelpers.push({id: -1, value: ''})}}
-                                                            >
-                                                                <AddIcon2 />
-                                                            </IconButton>
-                                                        </Grid>
-                                                        
-                                                    </Grid>
-                                                </Grid> 
-                                            )}                                        
-                                        />  
-                                        <FieldArray
-                                            name="color"
-                                            render={arrayHelpers => (
-                                                <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
-                                                    <Grid container style={{background: '#efefef'}}>
-                                                        <Grid item xl={11} xs={11}>
-                                                            <Grid container spacing={1}>
-                                                                <Grid  item xl={12} xs={12}>
-                                                                    <label style={{fontSize: 12.5, color: 'rgba(0, 0, 0, 0.54)'}}>&nbsp;&nbsp;&nbsp;&nbsp;Color</label>
-                                                                </Grid>                                                            
-                                                                {values.color && values.color.length > 0 ? 
-                                                                    (
-                                                                        values.color.map((_color, index) => (
-                                                                            <Grid key={index} item xl={12} xs={12}>
-                                                                                <TextField
-                                                                                    size="small"
-                                                                                    error={Boolean(
-                                                                                        touched.color && touched.color[index] && touched.color[index].value &&
-                                                                                        errors.color && errors.color[index] && errors.color[index]
-                                                                                    )}
-                                                                                    fullWidth
-                                                                                    helperText={
-                                                                                        <>{touched.color && touched.color[index] && touched.color[index].value &&
-                                                                                        errors.color && errors.color[index] && errors.color[index]['value']}</>
-                                                                                    }
-                                                                                    label={<label><span style={{color: 'red'}}>*</span></label>}
-                                                                                    InputLabelProps={{
-                                                                                        shrink: true
-                                                                                    }}
-                                                                                    InputProps={{
-                                                                                        endAdornment: <IconButton 
-                                                                                            size="small" 
-                                                                                            color="primary" 
-                                                                                            aria-label="add to shopping cart"
-                                                                                            onClick={() => { values.color.length > 1 && arrayHelpers.remove(index)}}
-                                                                                        >
-                                                                                            <DeleteIcon />
-                                                                                        </IconButton>
-                                                                                    }}
-                                                                                    name={`color[${index}].value`}
-                                                                                    onBlur={handleBlur}
-                                                                                    onChange={handleChange}
-                                                                                    value={values.color[index].value}
-                                                                                    variant="outlined"
-                                                                                />
-                                                                            </Grid>
-                                                                        ))
-                                                                    ) : (
-                                                                        <></>
-                                                                    )
-                                                                }
-                                                            </Grid>
-                                                        </Grid>
-                                                        <Grid item xl={1} xs={1}>
-                                                            <IconButton 
-                                                                size="small" 
-                                                                color="secondary" 
-                                                                aria-label="add to shopping cart"
-                                                                onClick={() => { arrayHelpers.push({id: -1, value: ''})}}
-                                                            >
-                                                                <AddIcon2 />
-                                                            </IconButton>
-                                                        </Grid>
-                                                        
-                                                    </Grid>
-                                                </Grid> 
-                                            )}                                        
-                                        />  
+                                        <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
+                                            <TextField
+                                                size="small"
+                                                label={<label>Marca <span style={{color: 'red'}}>*</span></label>}
+                                                name="brand"
+                                                error={Boolean(touched.brand && errors.brand)}
+                                                helperText={touched.brand && errors.brand}
+                                                fullWidth
+                                                SelectProps={{ native: true }}
+                                                select
+                                                onBlur={handleBlur}
+                                                onChange={(e) => {
+                                                    getColor({id: e.target.value}).then(res => {
+                                                        setColors(res)
+                                                     }).catch(err => {
+                                                        setColors([]);
+                                                    });
+                                                    getCategory({id: e.target.value}).then(res => {
+                                                        setCategories(res)
+                                                     }).catch(err => {
+                                                        setCategories([]);
+                                                    });
+                                                    handleChange(e);
+                                                }}
+                                                value={values.brand}
+                                                variant="outlined"
+                                                InputLabelProps={{
+                                                    shrink: true
+                                                }}
+                                            >
+                                                <option key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                                {brands.map((brand) => (
+                                                    <option
+                                                    key={brand.marca_c_vid}
+                                                    value={brand.marca_c_vid}
+                                                    >
+                                                    {brand.marca_c_vdescripcion}
+                                                    </option>
+                                                ))}
+                                             </TextField>
+                                        </Grid>
+                                        <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
+                                            <TextField
+                                                size="small"
+                                                label={<label>Color <span style={{color: 'red'}}>*</span></label>}
+                                                name="color"
+                                                error={Boolean(touched.color && errors.color)}
+                                                helperText={touched.color && errors.color}
+                                                fullWidth
+                                                SelectProps={{ native: true }}
+                                                select
+                                                onBlur={handleBlur}
+                                                onChange={(e) => {
+                                                    handleChange(e);
+                                                }}
+                                                value={values.color}
+                                                variant="outlined"
+                                                InputLabelProps={{
+                                                    shrink: true
+                                                }}
+                                            >
+                                                <option key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                                {colors.map((color) => (
+                                                    <option
+                                                    key={color.marca_color_c_vid}
+                                                    value={color.marca_color_c_vid}
+                                                    >
+                                                    {color.marca_color_c_vid}
+                                                    </option>
+                                                ))}
+                                             </TextField>
+                                        </Grid>
                                       
                                     </Grid>
                                 </Grid>
@@ -347,7 +400,7 @@ const NewEstilo: FC<NewEstiloProps> = ({
                                     <Grid container spacing={3}>
                                         <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
                                             <div style={{padding: '10%'}}>
-                                                <div style={{minHeight: '50px',position: 'relative'}}>
+                                                <div style={{minHeight: '50px',position: 'relative', border: Boolean(touched.image && errors.image) ? '1px solid red' : null}}>
                                                     <input type="file" style={{
                                                         width: '100%',
                                                         height: '100%',
@@ -357,10 +410,10 @@ const NewEstilo: FC<NewEstiloProps> = ({
                                                         position: 'absolute',
                                                         opacity: 0,
                                                         zIndex: 99999
-                                                    }}                                                     
+                                                    }}                   
                                                     onChange={(e) => {                                                        
-                                                        setFieldValue('imageUrl', URL.createObjectURL(e.target.files[0]))
-                                                        setFieldValue('image', e.target.files[0])
+                                                        setFieldValue('imageUrl', URL.createObjectURL(e.currentTarget.files[0]))
+                                                        setFieldValue('image', e.currentTarget.files[0])
                                                     }}
                                                     />
                                                     {/* <Field /> */}
@@ -376,103 +429,75 @@ const NewEstilo: FC<NewEstiloProps> = ({
                                                     />
                                                 </div>
                                             </div>
-                                        </Grid>
-                                        <FieldArray
-                                            name="category"
-                                            render={arrayHelpers => (
-                                                <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
-                                                    <Grid container style={{background: '#efefef'}}>
-                                                        <Grid item xl={11} xs={11}>
-                                                            <Grid container spacing={1}>
-                                                                <Grid  item xl={12} xs={12}>
-                                                                    <label style={{fontSize: 12.5, color: 'rgba(0, 0, 0, 0.54)'}}>&nbsp;&nbsp;&nbsp;&nbsp;Categoría</label>
-                                                                </Grid>                                                            
-                                                                {values.category && values.category.length > 0 ? 
-                                                                    (
-                                                                        values.category.map((_category, index) => (
-                                                                            <Grid key={index} item xl={12} xs={12}>
-                                                                                <TextField
-                                                                                    size="small"
-                                                                                    error={Boolean(
-                                                                                        touched.category && touched.category[index] && touched.category[index].value &&
-                                                                                        errors.category && errors.category[index] && errors.category[index]
-                                                                                    )}
-                                                                                    fullWidth
-                                                                                    helperText={
-                                                                                        <>{touched.category && touched.category[index] && touched.category[index].value &&
-                                                                                        errors.category && errors.category[index] && errors.category[index]['value']}</>
-                                                                                    }
-                                                                                    label={<label><span style={{color: 'red'}}>*</span></label>}
-                                                                                    InputLabelProps={{
-                                                                                        shrink: true
-                                                                                    }}
-                                                                                    InputProps={{
-                                                                                        endAdornment: <IconButton 
-                                                                                            size="small" 
-                                                                                            color="primary" 
-                                                                                            aria-label="add to shopping cart"
-                                                                                            onClick={() => { values.category.length > 1 && arrayHelpers.remove(index)}}
-                                                                                        >
-                                                                                            <DeleteIcon />
-                                                                                        </IconButton>
-                                                                                    }}
-                                                                                    name={`category[${index}].value`}
-                                                                                    onBlur={handleBlur}
-                                                                                    onChange={handleChange}
-                                                                                    value={values.category[index].value}
-                                                                                    variant="outlined"
-                                                                                />
-                                                                            </Grid>
-                                                                        ))
-                                                                    ) : (
-                                                                        <></>
-                                                                    )
-                                                                }
-                                                            </Grid>
-                                                        </Grid>
-                                                        <Grid item xl={1} xs={1}>
-                                                            <IconButton 
-                                                                size="small" 
-                                                                color="secondary" 
-                                                                aria-label="add to shopping cart"
-                                                                onClick={() => { arrayHelpers.push({id: -1, value: ''})}}
-                                                            >
-                                                                <AddIcon2 />
-                                                            </IconButton>
-                                                        </Grid>
-                                                        
-                                                    </Grid>
-                                                </Grid> 
-                                            )}                                        
-                                        />
-                                        <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
-                                            <Grid container spacing={0}  style={{background: '#efefef'}}>
-                                                <Grid  item xl={12} xs={12}>
-                                                    <label style={{fontSize: 12.5, color: 'rgba(0, 0, 0, 0.54)'}}>&nbsp;&nbsp;&nbsp;&nbsp;Talla <span style={{color: 'red'}}>*</span></label>
-                                                </Grid> 
-                                                <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
-                                                    <FormControl component="fieldset">
-                                                        <RadioGroup row aria-label="position" name="size" defaultValue="0" onChange={handleChange}>
-                                                            <FormControlLabel
-                                                                value="0"
-                                                                control={<Radio color="primary" />}
-                                                                label="S"
-                                                            />
-                                                            <FormControlLabel
-                                                                value="1"
-                                                                control={<Radio color="primary" />}
-                                                                label="M"
-                                                            />
-                                                            <FormControlLabel
-                                                                value="2"
-                                                                control={<Radio color="primary" />}
-                                                                label="L"
-                                                            />
-                                                        </RadioGroup>
-                                                    </FormControl>
-                                                </Grid>
-                                            </Grid>
+                                            {
+                                                Boolean(touched.image && errors.image) &&
+                                                <div>
+                                                    <label><span style={{color: 'red'}}>{touched.image && errors.image}</span></label>
+                                                </div>
+                                            }
                                             
+                                        </Grid>
+                                        <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
+                                            <TextField
+                                                size="small"
+                                                label={<label>Categoría <span style={{color: 'red'}}>*</span></label>}
+                                                name="category"
+                                                error={Boolean(touched.category && errors.category)}
+                                                helperText={touched.category && errors.category}
+                                                fullWidth
+                                                SelectProps={{ native: true }}
+                                                select
+                                                onBlur={handleBlur}
+                                                onChange={(e) => {
+                                                    handleChange(e);
+                                                }}
+                                                value={values.category}
+                                                variant="outlined"
+                                                InputLabelProps={{
+                                                    shrink: true
+                                                }}
+                                            >
+                                                <option key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                                {categories.map((category) => (
+                                                    <option
+                                                    key={category.marca_categoria_c_vid}
+                                                    value={category.marca_categoria_c_vid}
+                                                    >
+                                                    {category.marca_categoria_c_vid}
+                                                    </option>
+                                                ))}
+                                             </TextField>
+                                        </Grid>
+                                        <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
+                                            <TextField
+                                                size="small"
+                                                label={<label>Talla <span style={{color: 'red'}}>*</span></label>}
+                                                name="size"
+                                                error={Boolean(touched.size && errors.size)}
+                                                helperText={touched.size && errors.size}
+                                                fullWidth
+                                                SelectProps={{ native: true }}
+                                                select
+                                                onBlur={handleBlur}
+                                                onChange={(e) => {
+                                                    handleChange(e);
+                                                }}
+                                                value={values.size}
+                                                variant="outlined"
+                                                InputLabelProps={{
+                                                    shrink: true
+                                                }}
+                                            >
+                                                <option key="-1" value="-1">{'-- Seleccionar --'}</option>
+                                                {tallas.map((talla) => (
+                                                    <option
+                                                    key={talla.talla_c_vid}
+                                                    value={talla.talla_c_vid}
+                                                    >
+                                                    {talla.talla_c_vdescripcion}
+                                                    </option>
+                                                ))}
+                                             </TextField>
                                         </Grid>
                                     </Grid>
                                 </Grid>

@@ -14,4 +14,11 @@
         public bool client { get; set; }
         public bool provider { get; set; }
     }
+
+    public class SearchStyleKey
+    {
+        public string code { get; set; }
+        public string name { get; set; }
+        public string color { get; set; }
+    }
 }
